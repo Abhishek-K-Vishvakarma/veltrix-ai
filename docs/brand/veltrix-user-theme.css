@@ -1,0 +1,9 @@
+/* VELTRIX — User side theme: "Cobalt Day" (admin side keeps Paper / Lab)
+   Cool pale-blue white + navy ink + cobalt primary. Brand vermilion stays only for the logo/key findings. */
+[data-side="user"]{
+  color-scheme:light;
+  --background:#F2F5FB; --card:#FFFFFF; --surface-2:#E8EDF8; --border:#DDE3F0;
+  --foreground:#0B1220; --muted-foreground:#5C6780;
+  --primary:#2347F5; --primary-foreground:#FFFFFF;
+  --signal:#FF4A1C; --verified:#0E7C66; --ring:#2347F5; --radius:0px;
+}

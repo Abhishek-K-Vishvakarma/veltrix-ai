@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VELTRIX — User Side Template</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme=paper]{--bg:#F6F4EE;--c:#fff;--sand:#EFEBDF;--ln:#E4E0D5;--ink:#14130F;--m:#6F6A5E;--pri:#14130F;--pf:#F6F4EE;--sig:#FF4A1C;--ok:#0E7C66}
+[data-theme=lab]{--bg:#F4F7F6;--c:#fff;--sand:#E8EFEC;--ln:#DCE5E1;--ink:#0B1F1C;--m:#5B706B;--pri:#0F766E;--pf:#fff;--sig:#F59E0B;--ok:#0F766E}
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;border-radius:0}html{height:100%}
+body{background:var(--bg);color:var(--ink);font:13.5px/1.5 'Instrument Sans','Segoe UI',Helvetica,Arial,sans-serif;display:flex;min-height:100%}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+button{font:inherit;color:inherit;cursor:pointer}  
+.btn{height:30px;padding:0 12px;border:1px solid var(--ln);background:var(--c);font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn:hover{background:var(--sand);border-color:var(--ink)}.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.btn.p{background:var(--pri);color:var(--pf);border-color:var(--pri)}.btn.p:hover{opacity:.86}
+.btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+aside{width:224px;padding:18px 12px;border-right:1px solid var(--ln);display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:3px;padding:2px 8px 16px}
+aside h6{font-size:10px;letter-spacing:1.6px;color:var(--m);margin:14px 10px 4px}
+aside a{display:flex;align-items:center;gap:10px;padding:7px 10px;color:var(--m);cursor:pointer;border:1px solid transparent;position:relative;transition:all .15s;user-select:none}
+aside a i{font-style:normal;width:16px;text-align:center}
+aside a:hover{background:var(--sand);color:var(--ink)}
+aside a.on{background:var(--c);color:var(--ink);font-weight:600;border-color:var(--ink)}
+aside a.on:before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:var(--sig)}
+aside a.on i{color:var(--sig)}
+.st{margin-top:auto;padding:8px 10px;color:var(--m);font-size:12px}
+.st b{display:inline-block;width:7px;height:7px;background:var(--ok);margin-right:6px}
+main{flex:1;padding:22px 32px 34px;min-width:0;max-width:1100px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+.crumb,.seg{color:var(--m);font-size:12.5px}.crumb b{color:var(--ink);font-weight:600}.seg{display:flex;gap:4px;align-items:center}
+h1{font-size:28px;font-weight:650;letter-spacing:-.5px}h1 b{color:var(--sig)}
+.sub{color:var(--m);margin:2px 0 18px}
+.box,.card{background:var(--c);border:1px solid var(--ln);padding:16px;transition:border-color .15s}
+.card:hover,.box:hover,.box:focus-within{border-color:var(--ink)}
+textarea{width:100%;border:0;outline:0;resize:none;background:none;font:inherit;color:var(--ink);height:60px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.bar>div{display:flex;gap:6px;flex-wrap:wrap}
+.grid{display:grid;gap:12px;margin-top:14px}.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.g2{grid-template-columns:2fr 1fr}
+small{color:var(--m);font-size:10.5px;letter-spacing:.9px;text-transform:uppercase}
+.n{display:block;font-size:26px;font-weight:500;margin-top:2px}
+svg{display:block}.ch{width:100%;height:auto}
+.cat{display:flex;height:14px;margin:14px 0 10px}.cat i{display:block}
+.leg{font-size:12px;color:var(--m);display:grid;gap:4px}.leg s{display:inline-block;width:8px;height:8px;margin-right:6px;text-decoration:none}
+.steps{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}
+.steps span{flex:1;min-width:80px;text-align:center;font-size:12px;padding:5px 4px;background:var(--sand)}
+.steps .d{background:var(--ink);color:var(--bg)}.steps .k{background:var(--sig);color:#fff}
+.meter{height:9px;width:94%;background:repeating-linear-gradient(90deg,var(--ok) 0 6px,transparent 6px 9px)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 8px;margin:0 -8px;border-top:1px solid var(--ln);cursor:pointer;transition:background .15s}
+.row:hover{background:var(--sand)}.row em{color:var(--m);font-style:normal}
+.tag{font-size:11px;padding:1px 8px;background:var(--sand);margin-left:8px;color:var(--m)}
+.drop{border:1.5px dashed var(--m);padding:34px 16px;text-align:center;color:var(--m);cursor:pointer;transition:all .15s}
+.drop:hover{border-color:var(--sig);background:var(--sand);color:var(--ink)}
+.v{display:none}.v.on{display:block}.pn{display:none;margin-top:12px}.pn.on{display:block}
+.big{font-size:34px}.ok{color:var(--ok)}
+table{width:100%;border-collapse:collapse;margin-top:8px}td{padding:8px;border-top:1px solid var(--ln)}tr:hover td{background:var(--sand)}
+.act{display:flex;gap:10px;align-items:center;padding:9px 8px;border-top:1px solid var(--ln);cursor:pointer}.act:hover{background:var(--sand)}
+.act input{accent-color:var(--ink)}
+@media(max-width:760px){aside{display:none}main{padding:18px}.g2{grid-template-columns:1fr}}
+</style></head><body>
+<aside>
+  <div class="logo"><svg width="28" height="28" viewBox="0 0 72 72"><rect width="72" height="72" fill="#14130F"/>
+  <rect x="1.5" y="1.5" width="69" height="69" fill="none" stroke="#F6F4EE" stroke-opacity=".14"/>
+  <path d="M19 19 L36 53 L53 19" fill="none" stroke="#F6F4EE" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+  <rect x="14" y="14" width="10" height="10" fill="#14130F" stroke="#F6F4EE" stroke-width="3"/>
+  <rect x="48" y="14" width="10" height="10" fill="#14130F" stroke="#F6F4EE" stroke-width="3"/>
+  <path d="M36 31 V53" stroke="#FF4A1C" stroke-width="3" stroke-linecap="square"/>
+  <rect x="26" y="21" width="20" height="20" fill="none" stroke="#FF4A1C" stroke-opacity=".45" stroke-width="2" transform="rotate(45 36 31)"/>
+  <rect x="31" y="26" width="10" height="10" fill="#FF4A1C" transform="rotate(45 36 31)"/></svg>VELTR<span style="color:var(--sig)">I</span>X</div>
+  <h6>WORKSPACE</h6>
+  <a class="on" data-v="dash"><i>⌂</i>Dashboard</a><a data-v="new"><i>✦</i>New Analysis</a><a data-v="other"><i>◷</i>History</a>
+  <h6>INTELLIGENCE</h6>
+  <a data-v="other"><i>◇</i>Insights</a><a data-v="other"><i>▦</i>Analytics</a><a data-v="other"><i>◈</i>Knowledge</a>
+  <h6>LIBRARY</h6>
+  <a data-v="other"><i>▣</i>Projects</a><a data-v="other"><i>□</i>Documents</a>
+  <h6>SYSTEM</h6>
+  <a data-v="other"><i>⚙</i>Settings</a><a data-v="other"><i>?</i>Help</a>
+  <div class="st"><b></b>AI Online</div>
+</aside>
+<main>
+  <div class="top">
+    <div class="crumb">Workspace / <b id="cr">Dashboard</b></div>
+    <div class="seg">Theme <button class="btn on" data-t="paper">Paper</button><button class="btn" data-t="lab">Lab</button></div>
+  </div>
+
+  <section class="v on" id="dash">
+    <h1>Good morning, Abhishek<b>.</b></h1>
+    <p class="sub">Give me the evidence. I'll show you what to do next.</p>
+    <div class="box"><textarea placeholder="Describe a problem..."></textarea>
+      <div class="bar"><div><button class="btn">📎 Upload</button><button class="btn">📷 Image</button><button class="btn">📄 File</button></div><button class="btn p" data-go="result">Analyze →</button></div></div>
+    <div class="grid g4">
+      <div class="card"><small>Analyses</small><span class="n mono">128</span></div>
+      <div class="card"><small>Avg Confidence</small><span class="n mono">94.7%</span></div>
+      <div class="card"><small>Problems Solved</small><span class="n mono">36</span></div>
+      <div class="card"><small>Time Saved</small><span class="n mono">12.4h</span></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><small>Analysis Activity</small>
+        <svg class="ch" viewBox="0 0 400 130"><path d="M0 125 H400" stroke="var(--ln)"/><path d="M0 105 L60 85 L120 95 L180 55 L240 66 L300 36 L360 46 L400 18" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="miter"/><rect x="394" y="12" width="12" height="12" fill="var(--sig)"/></svg></div>
+      <div class="card"><small>Categories</small>
+        <div class="cat"><i style="width:40%;background:var(--ink)"></i><i style="width:26%;background:var(--sig)"></i><i style="width:20%;background:var(--ok)"></i><i style="width:14%;background:var(--ln)"></i></div>
+        <div class="leg"><span><s style="background:var(--ink)"></s>Financial 40%</span><span><s style="background:var(--sig)"></s>Technical 26%</span><span><s style="background:var(--ok)"></s>Documents 20%</span></div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><small>Recent Intelligence</small>
+      <div class="row" data-go="result"><span>Electricity Bill<span class="tag">3 evidence</span></span><em>Today</em></div>
+      <div class="row"><span>Contract Analysis<span class="tag">PDF</span></span><em>Yesterday</em></div>
+      <div class="row"><span>Device Inspection<span class="tag">Image</span></span><em>Sep 30</em></div></div>
+  </section>
+
+  <section class="v" id="new">
+    <h1>New Analysis<b>.</b></h1>
+    <p class="sub">Add your evidence. VELTRIX will investigate.</p>
+    <div class="bar" style="justify-content:flex-start"><div><button class="btn on" data-m="m1">📷 Visual</button><button class="btn" data-m="m2">📄 Document</button><button class="btn" data-m="m3">📝 Problem</button></div></div>
+    <div class="pn on" id="m1"><div class="drop">Drop an image here or click to upload<br><small>PNG · JPG · WEBP</small></div></div>
+    <div class="pn" id="m2"><div class="drop">Drop PDF / DOCX / CSV here or click to upload<br><small>Up to 20 MB</small></div></div>
+    <div class="pn" id="m3"><div class="box"><textarea placeholder="Describe your problem..."></textarea></div></div>
+    <div class="card" style="margin-top:14px"><small>3 evidence files</small>
+      <div class="row"><span class="mono ok">✓ electricity_bill.pdf</span><button class="btn x">✕</button></div>
+      <div class="row"><span class="mono ok">✓ previous_bill.jpg</span><button class="btn x">✕</button></div>
+      <div class="row"><span class="mono ok">✓ appliance_photo.jpg</span><button class="btn x">✕</button></div></div>
+    <div style="margin-top:14px"><button class="btn p" data-go="result">Start Investigation →</button></div>
+  </section>
+
+  <section class="v" id="result">
+    <div class="bar"><div style="display:block"><small>Veltrix Analysis</small><h1>Electricity Consumption<b>.</b></h1></div>
+      <div style="display:block;text-align:right"><small>Confidence</small><span class="n mono big ok">94.2%</span></div></div>
+    <div class="steps"><span class="d">✓ Evidence</span><span class="d">✓ Extract</span><span class="d">✓ Reason</span><span class="d">✓ Verify</span><span class="k">Action</span></div>
+    <div class="grid g2" style="margin-top:0">
+      <div class="card"><small>Evidence</small><table class="mono">
+        <tr><td>Previous Reading</td><td>2495</td><td><span class="tag">Bill · p1</span></td></tr>
+        <tr><td>Current Reading</td><td>2715</td><td><span class="tag">Bill · p1</span></td></tr>
+        <tr><td>Consumption</td><td>220 units</td><td><span class="tag">Calculated</span></td></tr></table></div>
+      <div class="card"><small>Calculation</small><span class="n mono">₹2,200</span><div class="mono" style="color:var(--m)">220 × ₹10</div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><small>Findings</small>
+      <p style="margin-top:6px">Consumption is significantly higher than usual. Likely contributors: AC, geyser, refrigerator and other high-load appliances.</p>
+      <div style="margin-top:10px"><button class="btn" id="why">Why this conclusion?</button></div>
+      <p id="wy" class="mono" style="display:none;margin-top:10px;color:var(--m)">Evidence used: Current reading · Previous reading · User input</p></div>
+    <div class="card" style="margin-top:12px"><small>Recommended Actions</small>
+      <label class="act"><input type="checkbox">Check appliance usage</label><label class="act"><input type="checkbox">Verify meter reading</label>
+      <label class="act"><input type="checkbox">Compare previous bills</label><label class="act"><input type="checkbox">Monitor next billing cycle</label></div>
+  </section>
+
+  <section class="v" id="other"><h1 id="ot"></h1><p class="sub">This screen's template comes next.</p></section>
+</main>
+<script>
+const show=(id,label)=>{document.querySelectorAll('.v').forEach(s=>s.classList.toggle('on',s.id===id));
+  document.getElementById('cr').textContent=label;
+  if(id==='other')document.getElementById('ot').textContent=label;};
+document.querySelectorAll('aside a').forEach(a=>a.addEventListener('click',()=>{
+  document.querySelectorAll('aside a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
+  show(a.dataset.v,a.textContent.trim());}));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('aside a').forEach(x=>x.classList.remove('on'));show('result','Analysis Result');}));
+document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pn').forEach(p=>p.classList.toggle('on',p.id===b.dataset.m));}));
+document.querySelectorAll('.x').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();b.closest('.row').remove();}));
+document.getElementById('why').addEventListener('click',()=>{const w=document.getElementById('wy');w.style.display=w.style.display==='block'?'none':'block';});
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{
+  document.documentElement.dataset.theme=b.dataset.t;
+  document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));}));
+</script>
+</body></html>

@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/* =========================================
+   VELTRIX DESIGN SYSTEM
+   ========================================= */
+
+:root {
+  /* VELTRIX Paper Theme */
+  --bg: #f6f4ee;
+  --card: #ffffff;
+  --sand: #efebdf;
+  --border: #e4e0d5;
+
+  --ink: #14130f;
+  --muted: #6f6a5e;
+
+  --primary: #14130f;
+  --primary-text: #f6f4ee;
+
+  --signal: #ff4a1c;
+  --verified: #0e7c66;
+
+  /* Typography */
+  --font-veltrix-sans: var(--font-instrument-sans);
+  --font-veltrix-mono: var(--font-jetbrains-mono);
+
+  /* Keep Tailwind compatibility */
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-veltrix-sans);
+  --font-mono: var(--font-veltrix-mono);
+}
+
+/* =========================================
+   BASE
+   ========================================= */
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+
+  background: var(--bg);
+  color: var(--ink);
+
+  font-family:
+    var(--font-veltrix-sans),
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   VELTRIX MONO
+   ========================================= */
+
+.font-mono {
+  font-family:
+    var(--font-veltrix-mono),
+    "JetBrains Mono",
+    monospace;
+}
+
+/* =========================================
+   SELECTION
+   ========================================= */
+
+::selection {
+  background: var(--ink);
+  color: var(--primary-text);
+}
+
+/* =========================================
+   FOCUS
+   ========================================= */
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* =========================================
+   VELTRIX BUTTON INTERACTION
+   ========================================= */
+
+button {
+  cursor: pointer;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+/* =========================================
+   SCROLLBAR
+   ========================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}

@@ -1,0 +1,7 @@
+google-genai
+pymupdf
+python-docx
+pandas
+pillow
+opencv-python-headless
+chromadb

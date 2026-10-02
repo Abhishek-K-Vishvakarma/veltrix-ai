@@ -1,0 +1,18 @@
+/* VELTRIX themes — paste into frontend/app/globals.css
+   Switch with: document.documentElement.dataset.theme = "paper" | "lab" */
+:root,[data-theme="paper"]{ /* Theme 1: Evidence Paper (warm paper + ink + vermilion) */
+  color-scheme:light;
+  --background:#F6F4EE; --card:#FFFFFF; --surface-2:#EFEBDF; --border:#E4E0D5;
+  --foreground:#14130F; --muted-foreground:#6F6A5E;
+  --primary:#14130F; --primary-foreground:#F6F4EE;
+  --signal:#FF4A1C; --verified:#0E7C66; --ring:#FF4A1C;
+}
+[data-theme="lab"]{ /* Theme 2: Clean Lab (cool white + deep teal + amber) */
+  color-scheme:light;
+  --background:#F4F7F6; --card:#FFFFFF; --surface-2:#E8EFEC; --border:#DCE5E1;
+  --foreground:#0B1F1C; --muted-foreground:#5B706B;
+  --primary:#0F766E; --primary-foreground:#FFFFFF;
+  --signal:#F59E0B; --verified:#0F766E; --ring:#0F766E;
+}
+:root{--radius:0px;--font-sans:'Instrument Sans',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace}
+body{background:var(--background);color:var(--foreground);font-family:var(--font-sans)}
