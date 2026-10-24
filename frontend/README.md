@@ -20,6 +20,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## User dashboard
+
+The admin frontend sends non-admin accounts to the separate user frontend.
+Set `NEXT_PUBLIC_USER_APP_URL` to the user frontend's origin when developing
+on a different port or deploying, for example `http://localhost:3000`. Restart
+the Next.js server after changing this value.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

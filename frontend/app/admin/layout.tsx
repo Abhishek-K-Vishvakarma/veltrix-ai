@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAccessToken, getUser, homeFor } from "@/lib/auth";
+import { clearSession, getAccessToken, getUser } from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
 
 export default function AdminLayout({
   children,
@@ -22,7 +23,8 @@ export default function AdminLayout({
     }
 
     if (user.role !== "admin") {
-      router.replace(homeFor(user));
+      clearSession();
+      router.replace(ROUTES.login);
       return;
     }
 

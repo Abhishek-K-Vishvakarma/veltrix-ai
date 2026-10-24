@@ -1,6 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload, selectinload
+from app.services.analysis_service import (
+    create_analysis,
+    read_uploads,
+    reset_for_retry,
+    run_pipeline,
+)
 
 from app.api.deps import require_admin
 from app.db.session import get_db
@@ -61,8 +76,8 @@ def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
         .options(
             joinedload(Analysis.user),
             selectinload(Analysis.findings),
-            selectinload(Analysis.actions),
-            selectinload(Analysis.logs),
+            selectinload(Analysis.action_plans),
+            selectinload(Analysis.reasoning_logs),
             selectinload(Analysis.evidence),
         )
     )
@@ -90,7 +105,7 @@ def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
                 "priority": x.priority,
                 "is_done": x.is_done,
             }
-            for x in a.actions
+            for x in a.action_plans
         ],
         "reasoning_logs": [
             {
@@ -101,7 +116,7 @@ def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
                 "duration_ms": l.duration_ms,
                 "created_at": l.created_at,
             }
-            for l in a.logs
+            for l in a.reasoning_logs
         ],
         "evidence_files": [
             {
@@ -136,3 +151,41 @@ def delete_analysis(
         "warning",
     )
     return {"message": "Analysis deleted"}
+
+
+@router.post("", status_code=202)
+async def admin_create_analysis(
+    bg: BackgroundTasks,
+    problem: str = Form(""),
+    files: list[UploadFile] = File(default=[]),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """AI Playground: admin runs an analysis (owned by the admin) to test prompts/models."""
+    a = create_analysis(db, admin, problem, await read_uploads(files))
+    bg.add_task(run_pipeline, a.id)
+    return {"id": a.id, "status": a.status}
+
+
+@router.post("/{analysis_id}/retry", status_code=202)
+def retry_analysis(
+    analysis_id: int,
+    bg: BackgroundTasks,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    a = db.get(Analysis, analysis_id)
+    if not a:
+        raise HTTPException(404, "Analysis not found")
+    if a.status == "processing":
+        raise HTTPException(409, "Analysis is already running")
+    reset_for_retry(db, a)
+    log_activity(
+        db,
+        admin.id,
+        "admin.analysis_retry",
+        "analysis",
+        f"Retried analysis #{analysis_id}",
+    )
+    bg.add_task(run_pipeline, a.id)
+    return {"id": a.id, "status": "processing"}

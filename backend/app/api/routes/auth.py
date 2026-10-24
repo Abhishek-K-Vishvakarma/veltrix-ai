@@ -9,7 +9,16 @@ from app.api.deps import get_current_user
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import Token, UserCreate, UserOut
+from app.models.user_preference import UserPreference
+from app.schemas.user import (
+    PasswordChange,
+    ProfileUpdate,
+    Token,
+    UserCreate,
+    UserOut,
+    UserPreferencesOut,
+    UserPreferencesUpdate,
+)
 from app.services.activity_service import log_activity
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -67,3 +76,67 @@ def login(
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)):
     return user
+
+
+@router.patch("/profile", response_model=UserOut)
+def update_profile(
+    body: ProfileUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user.full_name = body.full_name.strip()
+    if not user.full_name:
+        raise HTTPException(422, "Full name cannot be empty")
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.get("/preferences", response_model=UserPreferencesOut)
+def get_preferences(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    record = db.scalar(
+        select(UserPreference).where(UserPreference.user_id == user.id)
+    )
+    if record is None:
+        record = UserPreference(user_id=user.id)
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+    return record.preferences
+
+
+@router.put("/preferences", response_model=UserPreferencesOut)
+def update_preferences(
+    body: UserPreferencesUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    record = db.scalar(
+        select(UserPreference).where(UserPreference.user_id == user.id)
+    )
+    if record is None:
+        record = UserPreference(user_id=user.id, preferences=body.model_dump())
+        db.add(record)
+    else:
+        record.preferences = body.model_dump()
+    db.commit()
+    db.refresh(record)
+    return record.preferences
+
+
+@router.post("/change-password")
+def change_password(
+    body: PasswordChange,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(body.current_password, user.hashed_password):
+        raise HTTPException(400, "Current password is incorrect")
+    if verify_password(body.new_password, user.hashed_password):
+        raise HTTPException(400, "Choose a password different from your current one")
+    user.hashed_password = hash_password(body.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}

@@ -4,91 +4,76 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {getDashboard,type DashboardResponse,} from "@/services/admin.service";
 import { getUser, logout } from "@/lib/auth";
+import { getMe } from "@/services/auth.service";
 const navGroups = [
+  {
+    label: "OVERVIEW",
+    items: [
+      { label: "Dashboard", icon: "▦", active: true },
+    ],
+  },
+  {
+    label: "PLATFORM",
+    items: [
+      { label: "Users & Access", icon: "♙" },
+      { label: "Analyses Monitor", icon: "◉" },
+      { label: "Analytics", icon: "▥" },
+      { label: "Insights", icon: "◈" },
+    ],
+  },
   {
     label: "WORKSPACE",
     items: [
-      { label: "Dashboard", icon: "▦", active: true },
       { label: "New Analysis", icon: "＋" },
       { label: "History", icon: "◷" },
     ],
   },
   {
-    label: "INTELLIGENCE",
+    label: "RESOURCES",
     items: [
-      { label: "Insights", icon: "◇" },
-      { label: "Analytics", icon: "▥" },
       { label: "Knowledge", icon: "⌁" },
-    ],
-  },
-  {
-    label: "LIBRARY",
-    items: [
-      { label: "Projects", icon: "□" },
       { label: "Documents", icon: "▤" },
+      { label: "Projects", icon: "□" },
     ],
   },
   {
     label: "SYSTEM",
     items: [
+      { label: "System Health", icon: "⌁" },
       { label: "Settings", icon: "⚙" },
       { label: "Help", icon: "?" },
+      { label: "Logs", icon: "▤" },
     ],
   },
 ];
 
-const recentAnalyses = [
-  {
-    title: "Electricity Bill",
-    type: "UTILITY",
-    date: "Today, 4:32 PM",
-    confidence: "94.2%",
-    status: "Verified",
-  },
-  {
-    title: "Contract Analysis",
-    type: "DOCUMENT",
-    date: "Yesterday, 11:18 AM",
-    confidence: "91.8%",
-    status: "Verified",
-  },
-  {
-    title: "Device Inspection",
-    type: "VISUAL",
-    date: "Sep 28, 2:45 PM",
-    confidence: "96.1%",
-    status: "Verified",
-  },
-];
-
-const categories = [
-  { name: "Utilities", value: 40 },
-  { name: "Documents", value: 26 },
-  { name: "Visual Inspection", value: 20 },
-  { name: "Other", value: 14 },
-];
 
 const routeMap: Record<string, string> = {
   Dashboard: "/admin/dashboard",
   "New Analysis": "/admin/analyses",
   History: "/admin/history",
-  Insights: "/admin/insights",
+  "Users & Access": "/admin/users",
+  "Analyses Monitor": "/admin/analyses",
   Analytics: "/admin/analytics",
   Knowledge: "/admin/knowledge",
   Projects: "/admin/projects",
   Documents: "/admin/documents",
+  "System Health": "/admin/admin/system-matrics",
   Settings: "/admin/settings",
   Help: "/admin/help",
+  Logs: "/admin/admin/activity-logs",
 };
 
 export default function DashboardPage() {
-  const [theme, setTheme] = useState<"paper" | "lab">("paper");
- const [problem, setProblem] = useState("");
+const [theme, setTheme] = useState<"paper" | "lab">("paper");
+const [problem, setProblem] = useState("");
 const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
 const [profileOpen, setProfileOpen] = useState(false);
-const user = getUser();
+
+  const user = getUser();
+  console.log("user:", user);
   const router = useRouter(); 
   const isLab = theme === "lab";
   const activityPoints = dashboard?.analysis_activity ?? [];
@@ -301,7 +286,7 @@ useEffect(() => {
                 </div>
 
                 <h1 className="text-[26px] font-semibold tracking-[-0.025em]">
-                  Good morning, Abhishek.
+                  Good morning, {user ? (user?.full_name) : 'N/A'}
                 </h1>
 
                 <p
@@ -339,7 +324,17 @@ useEffect(() => {
   >
     + New Analysis
   </button>
-
+  <button
+   onClick={()=> router.push("/admin/users")}
+  className="inline-flex h-[30px] items-center border px-3 text-[12px] font-medium transition hover:opacity-75"
+  style={{
+      background: isLab ? "#0F766E" : "#14130F",
+      color: "#F6F4EE",
+      borderColor: isLab ? "#0F766E" : "#14130F",
+    }}
+>
+  + Add User
+</button>
   {/* PROFILE */}
   <div className="relative">
     <button

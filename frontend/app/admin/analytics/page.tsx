@@ -23,24 +23,30 @@ type Theme = "paper" | "lab";
 
 const navGroups = [
   {
-    title: "WORKSPACE",
+    title: "OVERVIEW",
     items: [
       { label: "Dashboard", icon: BarChart3 },
+    ],
+  },
+  {
+    title: "PLATFORM",
+    items: [
+      { label: "Users & Access", icon: Users },
+      { label: "Analyses Monitor", icon: FileText },
+      { label: "Analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    title: "WORKSPACE",
+    items: [
       { label: "New Analysis", icon: Zap },
       { label: "History", icon: FileText },
     ],
   },
   {
-    title: "INTELLIGENCE",
+    title: "RESOURCES",
     items: [
-      { label: "Insights", icon: Lightbulb },
-      { label: "Analytics", icon: BarChart3 },
       { label: "Knowledge", icon: ShieldCheck },
-    ],
-  },
-  {
-    title: "LIBRARY",
-    items: [
       { label: "Projects", icon: FileText },
       { label: "Documents", icon: FileText },
     ],
@@ -48,8 +54,10 @@ const navGroups = [
   {
     title: "SYSTEM",
     items: [
+      { label: "System Health", icon: ShieldCheck },
       { label: "Settings", icon: Settings },
       { label: "Help", icon: Users },
+      { label: "Logs", icon: FileText },
     ],
   },
 ];
@@ -59,12 +67,16 @@ const routeMap: Record<string, string> = {
   "New Analysis": "/admin/analyses",
   History: "/admin/history",
   Insights: "/admin/insights",
+  "Users & Access": "/admin/users",
+  "Analyses Monitor": "/admin/analyses",
   Analytics: "/admin/analytics",
   Knowledge: "/admin/knowledge",
   Projects: "/admin/projects",
   Documents: "/admin/documents",
+  "System Health": "/admin/admin/system-matrics",
   Settings: "/admin/settings",
   Help: "/admin/help",
+  Logs: "/admin/admin/activity-logs",
 };
 
 const activityData = [
@@ -624,4 +636,3 @@ export default function AnalyticsPage() {
     </main>
   );
 }
-

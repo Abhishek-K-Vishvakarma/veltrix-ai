@@ -5,6 +5,10 @@ const TOKEN_KEY = "veltrix_access_token";
 const REFRESH_KEY = "veltrix_refresh_token";
 const USER_KEY = "veltrix_user";
 
+export const USER_APP_URL =
+  process.env.NEXT_PUBLIC_USER_APP_URL?.replace(/\/+$/, "") ||
+  "http://localhost:3000";
+
 function isBrowser(): boolean {
   return typeof window !== "undefined";
 }
@@ -77,7 +81,7 @@ export function homeFor(
     return ROUTES.adminDashboard;
   }
 
-  return ROUTES.userDashboard;
+  return `${USER_APP_URL}/auth/login`;
 }
 
 export function logout(): void {

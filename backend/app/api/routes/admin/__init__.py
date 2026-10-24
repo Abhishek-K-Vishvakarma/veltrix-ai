@@ -5,7 +5,7 @@ from app.api.deps import require_admin
 from app.api.routes.admin.ai_performance import router as ai_performance_router
 from app.api.routes.admin.analyses import router as analyses_router
 from app.api.routes.admin.dashboard import router as dashboard_router
-from app.api.routes.knowledge import router as knowledge_router
+from app.api.routes.admin.knowledge import router as knowledge_router
 from app.api.routes.admin.logs import router as logs_router
 from app.api.routes.admin.models import router as models_router
 from app.api.routes.admin.system import router as system_router

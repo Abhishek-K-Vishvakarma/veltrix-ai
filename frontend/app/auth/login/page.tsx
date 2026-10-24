@@ -2,7 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { login } from "@/services/auth.service";
+import { clearSession, homeFor, saveSession } from "@/lib/auth";
+import { ROUTES } from "@/lib/routes";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,7 +27,17 @@ async function handleSubmit(e: FormEvent<HTMLFormElement>) {
       password,
     });
 
-    router.push("/admin/dashboard");
+    if (response.user.role !== "admin") {
+      clearSession();
+      setError(
+        "This account uses the user workspace. Please sign in through the user portal."
+      );
+      return;
+    }
+
+    saveSession(response);
+
+    router.replace(homeFor(response.user));
   } catch (err) {
     setError(
       err instanceof Error
@@ -153,12 +166,12 @@ async function handleSubmit(e: FormEvent<HTMLFormElement>) {
           <span style={{ color: "#6F6A5E" }}>
             Don't have an account?
           </span>{" "}
-          <button
-            onClick={() => router.push("/auth/register")}
+          <Link
+            href={ROUTES.register}
             className="font-semibold underline underline-offset-4"
           >
             Create account
-          </button>
+          </Link>
         </div>
       </div>
     </main>

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
@@ -36,6 +38,41 @@ class UserOut(BaseModel):
     is_active: bool
     created_at: datetime
     last_login_at: datetime | None = None
+
+
+class ProfileUpdate(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+
+
+class NotificationPreferences(BaseModel):
+    analysis_completed: bool
+    analysis_failed: bool
+    weekly_summary: bool
+
+
+class UserPreferencesOut(BaseModel):
+    theme: Literal["light", "dark"] = "light"
+    language: Literal["en"] = "en"
+    analysis_detail: Literal["concise", "detailed"] = "detailed"
+    notifications: NotificationPreferences = Field(
+        default_factory=lambda: NotificationPreferences(
+            analysis_completed=True,
+            analysis_failed=True,
+            weekly_summary=False,
+        )
+    )
+
+
+class UserPreferencesUpdate(BaseModel):
+    theme: Literal["light", "dark"]
+    language: Literal["en"]
+    analysis_detail: Literal["concise", "detailed"]
+    notifications: NotificationPreferences
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=72)
 
 
 class Token(BaseModel):

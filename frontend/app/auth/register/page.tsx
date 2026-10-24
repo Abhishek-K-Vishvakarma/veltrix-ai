@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/services/auth.service";
+import { ROUTES } from "@/lib/routes";
+import { USER_APP_URL } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,13 +22,13 @@ export default function RegisterPage() {
   setLoading(true);
 
   try {
-    const response = await register({
+    await register({
       name,
       email,
       password,
     });
 
-    router.push("/admin/dashboard");
+    router.replace(`${USER_APP_URL}/auth/login`);
   } catch (err) {
     setError(
       err instanceof Error
@@ -173,7 +175,7 @@ export default function RegisterPage() {
             Already have an account?
           </span>{" "}
           <button
-            onClick={() => router.push("/auth/login")}
+            onClick={() => router.push(ROUTES.login)}
             className="font-semibold underline underline-offset-4"
           >
             Sign in

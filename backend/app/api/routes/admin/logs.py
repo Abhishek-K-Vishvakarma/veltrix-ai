@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
-
+from datetime import datetime, timedelta, timezone
 from app.db.session import get_db
 from app.models.activity_log import ActivityLog
 from app.models.analysis import Analysis
 from app.utils.response import paginate
+from app.models.user import User
+from app.services.activity_service import log_activity
+from app.api.deps import require_admin
 
 router = APIRouter(prefix="/logs", tags=["admin: logs"])
 
@@ -95,3 +98,25 @@ def error_monitoring(
         )
         or 0,
     }
+
+
+# --- file ke end mein ---
+@router.delete("")
+def cleanup_logs(
+    older_than_days: int = Query(30, ge=1), 
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+    deleted = db.execute(deleted(ActivityLog).where(ActivityLog.created_at < cutoff)
+    ).rowcount
+    db.commit()
+    log_activity(
+        db,
+        admin.id,
+        "admin.logs_cleanup",
+        "activity_log",
+        f"Deleted {deleted} logs older than {older_than_days} days",
+        "warning",
+    )
+    return {"deleted": deleted}

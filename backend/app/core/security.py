@@ -18,16 +18,16 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: int, role: str) -> str:
-    exp = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+    exp = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_MINUTES)
     return jwt.encode(
         {"sub": str(user_id), "role": role, "exp": exp},
-        settings.jwt_secret_key,
+        settings.SECRET_KEY,
         algorithm=ALGORITHM,
     )
 
 
 def decode_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, settings.jwt_secret_key, algorithms=[ALGORITHM])
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None

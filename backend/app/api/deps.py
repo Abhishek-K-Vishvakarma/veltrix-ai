@@ -18,7 +18,13 @@ def get_current_user(
         raise HTTPException(
             401, "Invalid or expired token", headers={"WWW-Authenticate": "Bearer"}
         )
-    user = db.get(User, int(data["sub"]))
+    try:
+        user_id = int(data["sub"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(
+            401, "Invalid or expired token", headers={"WWW-Authenticate": "Bearer"}
+        ) from None
+    user = db.get(User, user_id)
     if not user or not user.is_active:
         raise HTTPException(401, "User not found or inactive")
     return user

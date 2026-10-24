@@ -1,3 +1,9 @@
-"""Pydantic schemas: finding"""
+"""Pydantic schema for analysis findings."""
 
-# TODO
+from pydantic import BaseModel
+
+
+class FindingItem(BaseModel):
+	title: str
+	description: str
+	source: str
