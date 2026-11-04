@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     # SECURITY / JWT
     # ============================================================
 
-    SECRET_KEY: str = "change-me"
+    SECRET_KEY: str = "5svD6gIZLZYWNwvmGQl--w3l-8yz1bft00ku4QAbtuFDxNaUGQ_eicB961m_p4CN"
 
     JWT_ALGORITHM: str = "HS256"
 
