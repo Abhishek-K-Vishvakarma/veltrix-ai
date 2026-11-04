@@ -1,8 +1,10 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, ClassVar
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+import platform
 
 _INSECURE_SECRETS = {
     "",
@@ -100,8 +102,15 @@ class Settings(BaseSettings):
     # ============================================================
     # VALIDATORS
     # ============================================================
+    default_tesseract: ClassVar[str] = (
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+        if platform.system() == "Windows"
+        else "/usr/bin/tesseract"
+    )
 
-    tesseract_cmd: str = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    tesseract_cmd: str = os.getenv("TESSERACT_CMD", default_tesseract)
+
+    # tesseract_cmd: str = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     # ============================================================
     # VALIDATORS
     # ============================================================
@@ -266,6 +275,7 @@ class Settings(BaseSettings):
     @property
     def TESSERACT_CMD(self) -> str:
         return self.tesseract_cmd
+
 
 @lru_cache
 def get_settings() -> Settings:

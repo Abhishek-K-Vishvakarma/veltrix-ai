@@ -3,7 +3,7 @@
 import io
 import re
 from dataclasses import dataclass
-
+import pytesseract
 from app.core.config import settings
 
 OCR_MIN_CONF = 70.0  # below this the image goes to Gemini vision instead
@@ -30,16 +30,14 @@ class OcrResult:
 NONE = OcrResult("", 0.0, "none")
 
 
-def _set_cmd(pytesseract) -> None:
+def _set_cmd(pytesseract_module) -> None:
     cmd = getattr(settings, "TESSERACT_CMD", "")
     if cmd:
-        pytesseract.pytesseract.tesseract_cmd = cmd
+        pytesseract_module.pytesseract.tesseract_cmd = cmd
 
 
 def tesseract_ok() -> bool:
     try:
-        import pytesseract
-
         _set_cmd(pytesseract)
         pytesseract.get_tesseract_version()
         return True
@@ -59,7 +57,6 @@ def _prepare(img):
 
 def ocr_image(data: bytes) -> OcrResult:
     try:
-        import pytesseract
         from PIL import Image
 
         _set_cmd(pytesseract)
@@ -69,6 +66,7 @@ def ocr_image(data: bytes) -> OcrResult:
         )
     except Exception:  # noqa: BLE001  (tesseract missing, corrupt image...)
         return NONE
+
     words, confs, lines = [], [], {}
     for i, w in enumerate(d["text"]):
         c = float(d["conf"][i])
@@ -78,6 +76,7 @@ def ocr_image(data: bytes) -> OcrResult:
             lines.setdefault(
                 (d["block_num"][i], d["par_num"][i], d["line_num"][i]), []
             ).append(w)
+
     if not words:
         return NONE
     text = "\n".join(" ".join(v) for v in lines.values())
@@ -92,11 +91,16 @@ def read_pdf(data: bytes) -> OcrResult:
         pages = [p.extract_text() or "" for p in PdfReader(io.BytesIO(data)).pages]
     except Exception:  # noqa: BLE001
         return NONE
-    text = "\n".join(f"[Page {index + 1}]\n{page}" for index, page in enumerate(pages)).strip()
+
+    text = "\n".join(
+        f"[Page {index + 1}]\n{page}" for index, page in enumerate(pages)
+    ).strip()
+
     if len(re.sub(r"\s", "", text)) < 40 * max(
         len(pages), 1
     ):  # too little text = scanned
         return NONE
+
     return OcrResult(text[:30000], 100.0, "pdf-text")
 
 
@@ -132,16 +136,14 @@ def read_digits(data: bytes) -> tuple[str, int, int]:
     Runs several clean-ups x page modes with a digits-only whitelist and takes a majority vote.
     """
     try:
-        import pytesseract
         from PIL import Image
 
-        cmd = getattr(settings, "TESSERACT_CMD", "")
-        if cmd:
-            pytesseract.pytesseract.tesseract_cmd = cmd
+        _set_cmd(pytesseract)
         img = Image.open(io.BytesIO(data))
         variants = _variants(img)
     except Exception:  # noqa: BLE001
         return "", 0, 0
+
     votes: dict[str, int] = {}
     passes = 0
     for v in variants:
@@ -156,20 +158,8 @@ def read_digits(data: bytes) -> tuple[str, int, int]:
                 continue
             for run in re.findall(r"\d{3,8}", txt):
                 votes[run] = votes.get(run, 0) + 1
+
     if not votes:
         return "", 0, passes
     best = max(votes, key=lambda k: (votes[k], len(k)))
     return best, votes[best], passes
-
-
-def tesseract_ok() -> bool:
-    try:
-        import pytesseract
-
-        cmd = getattr(settings, "TESSERACT_CMD", "")
-        if cmd:
-            pytesseract.pytesseract.tesseract_cmd = cmd
-        pytesseract.get_tesseract_version()
-        return True
-    except Exception:  # noqa: BLE001
-        return False

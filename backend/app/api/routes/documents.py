@@ -1,6 +1,6 @@
 """Upload and manage user-owned documents."""
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,8 +17,30 @@ from app.services.document_service import (
     read_document_upload,
 )
 from app.utils.response import paginate
+from app.services.knowledge_service import _extract_pages
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+@router.post("/upload-and-process/")
+async def upload_and_process(file: UploadFile = File(...)):
+    try:
+        # 1. File ko RAM mein bytes ke taur par read karo
+        data = await file.read()
+        mime_type = file.content_type or "application/octet-stream"
+
+        # 2. Knowledge service ko bytes pass karo (No local folder needed!)
+        extracted_pages = _extract_pages(
+            filename=file.filename, data=data, content_type=mime_type
+        )
+
+        return {
+            "filename": file.filename,
+            "total_pages_or_blocks": len(extracted_pages),
+            "status": "Processed successfully in-memory!",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("", status_code=201)

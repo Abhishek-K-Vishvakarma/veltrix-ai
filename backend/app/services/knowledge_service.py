@@ -28,10 +28,13 @@ _CHUNK_OVERLAP = 180
 _MAX_CHUNKS = 200
 
 
-def _extract_pages(document: Document) -> list[tuple[int | None, str]]:
-    data = read_bytes(document.storage_path)
-    suffix = Path(document.filename).suffix.lower()
-    if suffix == ".pdf":
+def _extract_pages(
+    filename: str, data: bytes, content_type: str
+) -> list[tuple[int | None, str]]:
+    suffix = Path(filename).suffix.lower()
+
+    # 1. PDF Handling
+    if suffix == ".pdf" or content_type == "application/pdf":
         from pypdf import PdfReader
         import fitz
         from app.tools.ocr import ocr_image
@@ -45,6 +48,8 @@ def _extract_pages(document: Document) -> list[tuple[int | None, str]]:
                 text = ocr_image(pixmap.tobytes("png")).text
             extracted.append((index + 1, text))
         return extracted
+
+    # 2. Word Document Handling (.docx)
     if suffix == ".docx":
         from docx import Document as WordDocument
 
@@ -56,12 +61,19 @@ def _extract_pages(document: Document) -> list[tuple[int | None, str]]:
             for row in table.rows
         ]
         return [(None, "\n".join(paragraphs + tables))]
+
+    # 3. Plain Text / CSV Handling
     if suffix in {".txt", ".csv"}:
         return [(None, data.decode("utf-8-sig", errors="replace"))]
-    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+
+    # 4. Image Handling
+    if suffix in {".png", ".jpg", ".jpeg", ".webp"} or content_type.startswith(
+        "image/"
+    ):
         from app.tools.ocr import extract
 
-        return [(None, extract(document.content_type, data).text)]
+        return [(None, extract(content_type, data).text)]
+
     raise ValueError("Unsupported document format for indexing")
 
 
