@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import {getDashboard,type DashboardResponse,} from "@/services/admin.service";
 import { getUser, logout } from "@/lib/auth";
 import { getMe } from "@/services/auth.service";
-const navGroups = [
+const navGroups: {
+  label: string;
+  items: { label: string; icon: string; active?: boolean }[];
+}[] = [
   {
     label: "OVERVIEW",
     items: [
