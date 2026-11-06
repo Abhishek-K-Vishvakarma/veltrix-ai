@@ -79,7 +79,7 @@ def system_settings():
     return {
         "frontend_url": settings.FRONTEND_URL,
         "access_token_minutes": settings.ACCESS_TOKEN_MINUTES,
-        "gemini_model": getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
+        "gemini_model": settings.GEMINI_MODEL,
         "gemini_configured": bool(settings.GEMINI_API_KEY),
         "upload_dir": str(getattr(settings, "UPLOAD_DIR", "uploads")),
     }

@@ -186,6 +186,24 @@ def test_permanent_provider_failure_is_not_retried(monkeypatch):
     assert calls == 1
 
 
+def test_unavailable_model_does_not_switch_to_a_hardcoded_fallback():
+    class ModelNotFoundError(Exception):
+        status_code = 404
+
+    requested_models = []
+
+    def generate_content(**kwargs):
+        requested_models.append(kwargs["model"])
+        raise ModelNotFoundError("model not found")
+
+    client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+
+    with pytest.raises(ModelNotFoundError):
+        gemini_client._generate(client, [], None, "configured-gemini-model")
+
+    assert requested_models == ["configured-gemini-model"]
+
+
 def test_offline_image_result_is_limited_and_not_meter_specific(monkeypatch):
     monkeypatch.setattr(settings, "GEMINI_API_KEY", "")
     monkeypatch.setattr(gemini_client.ocr, "extract", lambda mime, data: OcrResult("", 0, "none"))
@@ -208,6 +226,13 @@ def test_invalid_model_configuration_is_rejected(monkeypatch):
 
     with pytest.raises(ValueError, match="GEMINI_MODEL"):
         gemini_client.get_active_model()
+
+
+def test_active_model_uses_configured_setting_when_no_admin_override(monkeypatch):
+    monkeypatch.setattr(gemini_client, "_ACTIVE_MODEL", None)
+    monkeypatch.setattr(settings, "GEMINI_MODEL", "gemini-configured-model")
+
+    assert gemini_client.get_active_model() == "gemini-configured-model"
 
 
 def test_ground_check_drops_untraceable_calculation():

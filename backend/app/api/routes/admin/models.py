@@ -35,7 +35,7 @@ def models(db: Session = Depends(get_db)):
     return {
         "provider": "Google Gemini",
         "active_model": get_active_model(),
-        "configured_model": getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
+        "configured_model": settings.GEMINI_MODEL,
         "api_key_configured": bool(settings.GEMINI_API_KEY),
         "mock_mode": not settings.GEMINI_API_KEY,
         "usage": [

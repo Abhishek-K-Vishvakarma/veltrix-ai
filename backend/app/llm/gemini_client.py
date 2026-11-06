@@ -176,7 +176,7 @@ _LABELLED_VALUE = re.compile(
 
 
 def get_active_model() -> str:
-    model = (_ACTIVE_MODEL or getattr(settings, "GEMINI_MODEL", "")).strip()
+    model = (_ACTIVE_MODEL or settings.GEMINI_MODEL).strip()
     if not _MODEL_PATTERN.fullmatch(model):
         raise ValueError("GEMINI_MODEL must be a valid Gemini model identifier")
     return model
@@ -320,9 +320,7 @@ def _fallback_result(
         "This result uses local extraction only; image understanding and AI reasoning were unavailable."
     )
     if output.missing_evidence_message:
-        output.missing_evidence_message = (
-            f"{output.missing_evidence_message} {message}"
-        )
+        output.missing_evidence_message = f"{output.missing_evidence_message} {message}"
     output.confidence = min(output.confidence, 40.0)
     return output, Usage(provider_status=provider_status, error_message=message)
 
@@ -338,63 +336,37 @@ _RETRYABLE = (
     "timed out",
     "temporarily unavailable",
 )
-_MODEL_GONE = ("404", "NOT_FOUND", "no longer available")
-FALLBACK_MODELS = [
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
-    "gemini-2.5-flash-lite",
-]
-
-
 def _generate(client, contents, config, model):
-    """Retry temporary errors; if a model is gone for this key (404), move to the next one."""
-    last = None
-    for m in [model] + [x for x in FALLBACK_MODELS if x != model]:
-        for attempt in range(3):
-            try:
-                response = client.models.generate_content(
-                    model=m, contents=contents, config=config
-                )
-                if m != model:
-                    logger.info(
-                        "Gemini model fallback succeeded: configured_model=%s selected_model=%s",
-                        model,
-                        m,
-                    )
-                return response
-            except Exception as exc:  # noqa: BLE001
-                last = exc
-                msg = str(exc)
-                status = _status_code(exc)
-                if status == 404 or any(k in msg for k in _MODEL_GONE):
-                    logger.warning(
-                        "Gemini model is unavailable: model=%s status=%s",
-                        m,
-                        status,
-                    )
-                    break  # this model will never work: try the next model
-                if not _is_transient(exc) and not any(
-                    k in msg for k in _RETRYABLE
-                ):
-                    raise  # 403 / 400 / bad key: retrying will not help
-                if attempt < 2:
-                    logger.warning(
-                        "Retrying transient Gemini error: model=%s attempt=%d status=%s",
-                        m,
-                        attempt + 1,
-                        status,
-                    )
-                    time.sleep(1.5 * (2**attempt))
-                else:
-                    raise
-    raise last
+    """Retry transient errors using only the explicitly configured model."""
+    for attempt in range(3):
+        try:
+            return client.models.generate_content(
+                model=model, contents=contents, config=config
+            )
+        except Exception as exc:  # noqa: BLE001 - caller converts provider errors to fallback
+            message = str(exc)
+            if not _is_transient(exc) and not any(
+                marker in message for marker in _RETRYABLE
+            ):
+                raise
+            if attempt == 2:
+                raise
+            logger.warning(
+                "Retrying transient Gemini error: model=%s attempt=%d status=%s",
+                model,
+                attempt + 1,
+                _status_code(exc),
+            )
+            time.sleep(1.5 * (2**attempt))
 
 
 def analyze(
     problem: str, files: list[LoadedFile], model: str
 ) -> tuple[AnalysisOutput, Usage]:
     if not settings.GEMINI_API_KEY:
-        message = "GEMINI_API_KEY is not configured; only local extraction was available."
+        message = (
+            "GEMINI_API_KEY is not configured; only local extraction was available."
+        )
         logger.warning(
             "Gemini is not configured; using offline fallback: model=%s",
             model,
