@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
 from app.llm.gemini_client import AnalysisOutput, CalcItem, EvidenceItem, FindingItem, Usage
-from app.models import Analysis, AnalysisMetric, EvidenceFile, User
+from app.models import Analysis, AnalysisMetric, EvidenceFile, ReasoningLog, User
 from app.services import analysis_service
 
 
@@ -110,6 +110,72 @@ def test_pipeline_persists_partial_structured_output_and_checks_owner(analysis_d
     assert detail["uncertainties"] == ["One line item is user supplied."]
     assert metric.success is False
     assert metric.error_message == "Gemini denied access."
+    stages = {
+        row.step: row.status
+        for row in analysis_db.scalars(
+            select(ReasoningLog).where(ReasoningLog.analysis_id == analysis_id)
+        )
+    }
+    assert stages == {
+        "Evidence": "done",
+        "Extract": "partial",
+        "Reason": "failed",
+        "Verify": "partial",
+        "Action": "partial",
+    }
     with pytest.raises(HTTPException) as error:
         analysis_service.get_owned(analysis_db, other_user, analysis_id)
     assert error.value.status_code == 404
+
+
+def test_pipeline_reports_success_only_after_required_stages_complete(
+    analysis_db, monkeypatch
+):
+    owner = User(email="complete@example.test", hashed_password="unused")
+    analysis_db.add(owner)
+    analysis_db.commit()
+    analysis = Analysis(
+        user_id=owner.id,
+        title="Complete analysis",
+        category="Other",
+        input_type="problem",
+        status="processing",
+        result_json={"problem": "Summarize the result"},
+    )
+    analysis_db.add(analysis)
+    analysis_db.commit()
+    analysis_id = analysis.id
+
+    output = AnalysisOutput(
+        title="Verified result",
+        category="Other",
+        summary="The requested analysis is complete.",
+        confidence=90,
+        needs_more_evidence=False,
+        actions=["Review the result"],
+    )
+    monkeypatch.setattr(analysis_service, "get_active_model", lambda: "gemini-test")
+    monkeypatch.setattr(
+        analysis_service,
+        "analyze",
+        lambda *_args: (output, Usage(provider_status="ai")),
+    )
+
+    analysis_service.run_pipeline(analysis_id)
+    analysis_db.expire_all()
+    persisted = analysis_db.get(Analysis, analysis_id)
+    stages = {
+        row.step: row.status
+        for row in analysis_db.scalars(
+            select(ReasoningLog).where(ReasoningLog.analysis_id == analysis_id)
+        )
+    }
+
+    assert persisted.status == "completed"
+    assert stages == {
+        "Evidence": "done",
+        "Extract": "done",
+        "Reason": "done",
+        "Verify": "done",
+        "Action": "done",
+    }

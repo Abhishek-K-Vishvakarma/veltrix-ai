@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.session import get_db
+from app.tools.ocr import tesseract_diagnostics
 from app.models import (
     ActivityLog,
     Analysis,
@@ -37,6 +38,12 @@ def system_health(db: Session = Depends(get_db)):
         "api": "ok",
         "database": database,
         "gemini_configured": bool(settings.GEMINI_API_KEY),
+        "gemini": {
+            "configured": bool(settings.GEMINI_API_KEY),
+            "model": settings.GEMINI_MODEL,
+            "availability": "not_tested",
+        },
+        "tesseract": tesseract_diagnostics(),
         "uptime_seconds": int(time.time() - STARTED_AT),
         "python": sys.version.split()[0],
         "platform": platform.platform(),

@@ -200,9 +200,12 @@ def _text_of(file: LoadedFile) -> str:
             )[:30000]
         if file.mime.startswith("image/") or file.mime == "application/pdf":
             return ocr.extract(file.mime, file.data).text[:30000]
-    except (
-        Exception
-    ):  # noqa: BLE001 - corrupt or unavailable parsers make the source unreadable
+    except Exception as exc:  # noqa: BLE001 - keep other evidence available
+        logger.warning(
+            "Local file extraction failed: mime=%s exception_type=%s",
+            file.mime,
+            type(exc).__name__,
+        )
         return ""
     return file.data.decode("utf-8", errors="replace")[:30000]
 
@@ -316,6 +319,10 @@ def _fallback_result(
     output.uncertainties.append(
         "This result uses local extraction only; image understanding and AI reasoning were unavailable."
     )
+    if output.missing_evidence_message:
+        output.missing_evidence_message = (
+            f"{output.missing_evidence_message} {message}"
+        )
     output.confidence = min(output.confidence, 40.0)
     return output, Usage(provider_status=provider_status, error_message=message)
 
@@ -345,18 +352,41 @@ def _generate(client, contents, config, model):
     for m in [model] + [x for x in FALLBACK_MODELS if x != model]:
         for attempt in range(3):
             try:
-                return client.models.generate_content(
+                response = client.models.generate_content(
                     model=m, contents=contents, config=config
                 )
+                if m != model:
+                    logger.info(
+                        "Gemini model fallback succeeded: configured_model=%s selected_model=%s",
+                        model,
+                        m,
+                    )
+                return response
             except Exception as exc:  # noqa: BLE001
                 last = exc
                 msg = str(exc)
-                if any(k in msg for k in _MODEL_GONE):
+                status = _status_code(exc)
+                if status == 404 or any(k in msg for k in _MODEL_GONE):
+                    logger.warning(
+                        "Gemini model is unavailable: model=%s status=%s",
+                        m,
+                        status,
+                    )
                     break  # this model will never work: try the next model
-                if not any(k in msg for k in _RETRYABLE):
+                if not _is_transient(exc) and not any(
+                    k in msg for k in _RETRYABLE
+                ):
                     raise  # 403 / 400 / bad key: retrying will not help
                 if attempt < 2:
+                    logger.warning(
+                        "Retrying transient Gemini error: model=%s attempt=%d status=%s",
+                        m,
+                        attempt + 1,
+                        status,
+                    )
                     time.sleep(1.5 * (2**attempt))
+                else:
+                    raise
     raise last
 
 
@@ -364,15 +394,31 @@ def analyze(
     problem: str, files: list[LoadedFile], model: str
 ) -> tuple[AnalysisOutput, Usage]:
     if not settings.GEMINI_API_KEY:
-        return _offline(problem, files)
+        message = "GEMINI_API_KEY is not configured; only local extraction was available."
+        logger.warning(
+            "Gemini is not configured; using offline fallback: model=%s",
+            model,
+        )
+        return _fallback_result(problem, files, message, provider_status="offline")
     if not _MODEL_PATTERN.fullmatch(model or ""):
         raise ValueError("GEMINI_MODEL must be a valid Gemini model identifier")
 
+    started = time.perf_counter()
+    mime_types = sorted({file.mime for file in files})
+    logger.info(
+        "Gemini model selected: model=%s image_mimes=%s file_count=%d",
+        model,
+        ",".join(mime for mime in mime_types if mime.startswith("image/")) or "none",
+        len(files),
+    )
     try:
         from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = genai.Client(
+            api_key=settings.GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=60_000),
+        )
         parts: list[Any] = []
         corpus = problem or ""
         for file in files:
@@ -427,9 +473,12 @@ def analyze(
     ) as exc:  # noqa: BLE001 - model failure produces explicitly limited fallback
         message = _provider_error_message(exc)
         logger.warning(
-            "Gemini request failed: exception_type=%s status=%s",
+            "Gemini request failed: model=%s file_mimes=%s exception_type=%s status=%s duration_ms=%d",
+            model,
+            ",".join(mime_types),
             type(exc).__name__,
             _status_code(exc),
+            int((time.perf_counter() - started) * 1000),
         )
         return _fallback_result(problem, files, message)
 
@@ -444,7 +493,9 @@ def analyze(
     ) as exc:  # noqa: BLE001 - malformed provider output is not an analysis success
         message = "Gemini returned an invalid analysis response. The result contains local extraction only."
         logger.warning(
-            "Gemini response validation failed: exception_type=%s", type(exc).__name__
+            "Gemini response validation failed: model=%s exception_type=%s",
+            model,
+            type(exc).__name__,
         )
         return _fallback_result(problem, files, message)
 
@@ -452,6 +503,12 @@ def analyze(
     usage = Usage(
         prompt_tokens=getattr(metadata, "prompt_token_count", 0) or 0,
         completion_tokens=getattr(metadata, "candidates_token_count", 0) or 0,
+    )
+    logger.info(
+        "Gemini request succeeded: model=%s file_mimes=%s duration_ms=%d",
+        model,
+        ",".join(mime_types),
+        int((time.perf_counter() - started) * 1000),
     )
     return ground_check(output, corpus), usage
 

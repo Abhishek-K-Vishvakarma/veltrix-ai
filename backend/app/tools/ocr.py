@@ -1,10 +1,16 @@
 """OCR-first reading of evidence. Cheap, fast, local. Gemini vision is only the fallback."""
 
 import io
+import logging
 import re
+import time
 from dataclasses import dataclass
+from typing import Any
+
 import pytesseract
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 OCR_MIN_CONF = 70.0  # below this the image goes to Gemini vision instead
 OCR_MIN_CHARS = 20  # almost no text found -> let vision try
@@ -36,13 +42,26 @@ def _set_cmd(pytesseract_module) -> None:
         pytesseract_module.pytesseract.tesseract_cmd = cmd
 
 
-def tesseract_ok() -> bool:
+def tesseract_diagnostics() -> dict[str, Any]:
     try:
         _set_cmd(pytesseract)
-        pytesseract.get_tesseract_version()
-        return True
-    except Exception:  # noqa: BLE001
-        return False
+        version = str(pytesseract.get_tesseract_version())
+        languages = pytesseract.get_languages(config="")
+        return {
+            "available": True,
+            "version": version,
+            "languages": languages,
+        }
+    except Exception as exc:  # noqa: BLE001 - diagnostics must report missing binaries
+        logger.warning(
+            "Tesseract is unavailable: exception_type=%s",
+            type(exc).__name__,
+        )
+        return {"available": False, "version": None, "languages": []}
+
+
+def tesseract_ok() -> bool:
+    return bool(tesseract_diagnostics()["available"])
 
 
 def _prepare(img):
@@ -55,16 +74,25 @@ def _prepare(img):
     return ImageOps.autocontrast(img)
 
 
-def ocr_image(data: bytes) -> OcrResult:
+def ocr_image(data: bytes, mime: str = "image/unknown") -> OcrResult:
+    started = time.perf_counter()
     try:
         from PIL import Image
 
         _set_cmd(pytesseract)
-        img = _prepare(Image.open(io.BytesIO(data)))
+        with Image.open(io.BytesIO(data)) as source:
+            source.load()
+            img = _prepare(source)
         d = pytesseract.image_to_data(
             img, config="--oem 3 --psm 6", output_type=pytesseract.Output.DICT
         )
-    except Exception:  # noqa: BLE001  (tesseract missing, corrupt image...)
+    except Exception as exc:  # noqa: BLE001 - keep vision fallback available
+        logger.warning(
+            "Image OCR failed: mime=%s exception_type=%s duration_ms=%d",
+            mime,
+            type(exc).__name__,
+            int((time.perf_counter() - started) * 1000),
+        )
         return NONE
 
     words, confs, lines = [], [], {}
@@ -78,9 +106,23 @@ def ocr_image(data: bytes) -> OcrResult:
             ).append(w)
 
     if not words:
+        logger.info(
+            "Image OCR completed without readable words: mime=%s duration_ms=%d",
+            mime,
+            int((time.perf_counter() - started) * 1000),
+        )
         return NONE
     text = "\n".join(" ".join(v) for v in lines.values())
-    return OcrResult(text[:30000], round(sum(confs) / len(confs), 1), "tesseract")
+    confidence = round(sum(confs) / len(confs), 1)
+    logger.info(
+        "Image OCR completed: mime=%s characters=%d words=%d confidence=%.1f duration_ms=%d",
+        mime,
+        len(text),
+        len(words),
+        confidence,
+        int((time.perf_counter() - started) * 1000),
+    )
+    return OcrResult(text[:30000], confidence, "tesseract")
 
 
 def read_pdf(data: bytes) -> OcrResult:
@@ -89,7 +131,11 @@ def read_pdf(data: bytes) -> OcrResult:
         from pypdf import PdfReader
 
         pages = [p.extract_text() or "" for p in PdfReader(io.BytesIO(data)).pages]
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "PDF text extraction failed: exception_type=%s",
+            type(exc).__name__,
+        )
         return NONE
 
     text = "\n".join(
@@ -106,7 +152,7 @@ def read_pdf(data: bytes) -> OcrResult:
 
 def extract(mime: str, data: bytes) -> OcrResult:
     if mime.startswith("image/"):
-        return ocr_image(data)
+        return ocr_image(data, mime)
     if mime == "application/pdf":
         return read_pdf(data)
     return NONE
@@ -141,7 +187,11 @@ def read_digits(data: bytes) -> tuple[str, int, int]:
         _set_cmd(pytesseract)
         img = Image.open(io.BytesIO(data))
         variants = _variants(img)
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Digit OCR preprocessing failed: exception_type=%s",
+            type(exc).__name__,
+        )
         return "", 0, 0
 
     votes: dict[str, int] = {}
@@ -154,7 +204,12 @@ def read_digits(data: bytes) -> tuple[str, int, int]:
                     v,
                     config=f"--oem 3 --psm {psm} -c tessedit_char_whitelist=0123456789",
                 )
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "Digit OCR pass failed: psm=%d exception_type=%s",
+                    psm,
+                    type(exc).__name__,
+                )
                 continue
             for run in re.findall(r"\d{3,8}", txt):
                 votes[run] = votes.get(run, 0) + 1

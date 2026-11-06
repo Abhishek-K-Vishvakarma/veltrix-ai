@@ -22,6 +22,10 @@ def validate_upload(file: UploadFile, data: bytes) -> str:
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED:
         raise HTTPException(415, f"Unsupported file type: {ext or 'unknown'}")
+    declared_mime = (file.content_type or "").split(";", 1)[0].strip().lower()
+    if ext in {".png", ".jpg", ".jpeg", ".webp"} and declared_mime:
+        if declared_mime != ALLOWED[ext]:
+            raise HTTPException(415, "Image MIME type does not match its extension")
     if len(filename) > 255:
         raise HTTPException(400, "Filename is too long")
     if not data:

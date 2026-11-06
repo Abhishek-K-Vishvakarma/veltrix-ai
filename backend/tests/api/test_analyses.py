@@ -521,6 +521,20 @@ def test_rejects_empty_input_and_invalid_uploads(api_context):
     )
     assert mismatched.status_code == 400
 
+    mismatched_mime = api_context.client.post(
+        "/api/analyses",
+        data={"problem": "Check this"},
+        files={
+            "files": (
+                "payload.png",
+                b"\x89PNG\r\n\x1a\nvalid-signature",
+                "image/jpeg",
+            )
+        },
+        headers=api_context.owner_headers,
+    )
+    assert mismatched_mime.status_code == 415
+
     oversized = api_context.client.post(
         "/api/analyses",
         data={"problem": "Check this"},
@@ -631,6 +645,15 @@ def test_provider_fallback_and_pipeline_exception_are_not_successful(
     assert failed["provider_status"] == "unavailable"
     assert "RuntimeError" in failed["error_message"]
     assert "provider adapter failed" in caplog.text
+    fallback_stages = {
+        row["step"]: row["status"] for row in fallback["reasoning_logs"]
+    }
+    assert fallback_stages["Extract"] == "partial"
+    assert fallback_stages["Reason"] == "failed"
+    failed_stages = {row["step"]: row["status"] for row in failed["reasoning_logs"]}
+    assert failed_stages["Extract"] == "failed"
+    assert failed_stages["Reason"] == "skipped"
+    assert failed_stages["Action"] == "skipped"
 
     with api_context.factory() as db:
         metrics = db.scalars(

@@ -41,10 +41,15 @@ def _fake_sdk(monkeypatch, generate_content):
         def __init__(self, **kwargs):
             self.kwargs = kwargs
 
+    class HttpOptions:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
     types_module = SimpleNamespace(
         Part=Part,
         Content=Content,
         GenerateContentConfig=GenerateContentConfig,
+        HttpOptions=HttpOptions,
     )
     genai_module = SimpleNamespace(
         Client=lambda **kwargs: SimpleNamespace(
@@ -83,6 +88,65 @@ def test_ocr_text_does_not_replace_actual_image_payload(monkeypatch):
     assert any("Sales rose 12%" in part[1] for part in parts if part[0] == "text")
     assert output.summary == "A chart is visible."
     assert usage.provider_status == "ai"
+
+
+def test_gemini_receives_image_when_ocr_returns_no_text(monkeypatch):
+    seen = {}
+
+    def generate_content(**kwargs):
+        seen.update(kwargs)
+        return SimpleNamespace(parsed=_output(), usage_metadata=None)
+
+    _fake_sdk(monkeypatch, generate_content)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-key")
+    monkeypatch.setattr(
+        gemini_client.ocr,
+        "extract",
+        lambda mime, data: OcrResult("", 0, "none"),
+    )
+    file = LoadedFile("image.jpg", "image/jpeg", b"original-image-bytes")
+
+    output, usage = gemini_client.analyze(
+        "Read the meter value", [file], "gemini-test"
+    )
+
+    parts = seen["contents"][0].parts
+    assert ("bytes", b"original-image-bytes", "image/jpeg") in parts
+    assert any(
+        "Read the meter value" in part[1]
+        for part in parts
+        if part[0] == "text"
+    )
+    assert output.summary == "A chart is visible."
+    assert usage.provider_status == "ai"
+
+
+def test_gemini_api_failure_uses_clear_fallback(monkeypatch):
+    class ProviderError(Exception):
+        status_code = 503
+
+    def generate_content(**kwargs):
+        raise ProviderError("temporarily unavailable")
+
+    _fake_sdk(monkeypatch, generate_content)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "unit-test-key")
+    monkeypatch.setattr(gemini_client.time, "sleep", lambda _: None)
+    monkeypatch.setattr(
+        gemini_client.ocr,
+        "extract",
+        lambda mime, data: OcrResult("", 0, "none"),
+    )
+
+    output, usage = gemini_client.analyze(
+        "Describe the image",
+        [LoadedFile("image.jpg", "image/jpeg", b"image-bytes")],
+        "gemini-test",
+    )
+
+    assert output.confidence <= 40
+    assert output.findings[-1].title == "AI analysis unavailable"
+    assert usage.provider_status == "fallback"
+    assert "temporarily unavailable" in usage.error_message
 
 
 def test_transient_provider_failures_are_retried_with_a_bound(monkeypatch):
@@ -135,6 +199,7 @@ def test_offline_image_result_is_limited_and_not_meter_specific(monkeypatch):
     assert output.evidence == []
     assert "vision" in output.missing_evidence_message.lower()
     assert usage.provider_status == "offline"
+    assert "GEMINI_API_KEY" in usage.error_message
 
 
 def test_invalid_model_configuration_is_rejected(monkeypatch):

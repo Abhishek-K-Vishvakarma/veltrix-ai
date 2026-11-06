@@ -157,7 +157,10 @@ def run_pipeline(analysis_id: int) -> None:
         started = time.perf_counter()
         model = "unavailable"
         latency = 0
+        current_stage = "Evidence"
+        stage_order = ("Evidence", "Extract", "Reason", "Verify", "Action")
         try:
+            stage_started = time.perf_counter()
             model = get_active_model()
             result = a.result_json or {}
             problem = result.get("problem", "")
@@ -165,16 +168,6 @@ def run_pipeline(analysis_id: int) -> None:
             evidence_rows = list(a.evidence)
             knowledge_evidence = result.get("knowledge_evidence", [])
             knowledge_sources = result.get("knowledge_sources", [])
-            _log(
-                db,
-                a.id,
-                "Evidence",
-                (
-                    f"Reading {len(evidence_rows)} uploaded file(s) and "
-                    f"{len(knowledge_sources)} Knowledge Base document(s) "
-                    f"({len(knowledge_evidence)} indexed chunks)"
-                ),
-            )
             files = [
                 LoadedFile(e.filename, e.content_type, read_bytes(e.storage_path))
                 for e in evidence_rows
@@ -199,8 +192,20 @@ def run_pipeline(analysis_id: int) -> None:
                 )
                 for item in knowledge_evidence
             )
+            _log(
+                db,
+                a.id,
+                "Evidence",
+                (
+                    f"Loaded {len(evidence_rows)} uploaded file(s) and "
+                    f"{len(knowledge_sources)} Knowledge Base document(s) "
+                    f"({len(knowledge_evidence)} indexed chunks)"
+                ),
+                ms=int((time.perf_counter() - stage_started) * 1000),
+            )
 
-            _log(db, a.id, "Extract", "Reading values from the evidence")
+            current_stage = "Extract"
+            stage_started = time.perf_counter()
             t = time.perf_counter()
             detail_instruction = (
                 "Keep the response concise while preserving the key evidence and conclusions."
@@ -211,7 +216,48 @@ def run_pipeline(analysis_id: int) -> None:
             out, usage = analyze(prompt, files, model)
             latency = int((time.perf_counter() - t) * 1000)
 
-            _log(db, a.id, "Reason", "Interpreting the extracted values", ms=latency)
+            provider_available = usage.provider_status == "ai"
+            _log(
+                db,
+                a.id,
+                "Extract",
+                (
+                    "Structured multimodal extraction completed"
+                    if provider_available
+                    else "Local extraction fallback used; Gemini interpretation is unavailable"
+                ),
+                status="done" if provider_available else "partial",
+                ms=int((time.perf_counter() - stage_started) * 1000),
+            )
+
+            current_stage = "Reason"
+            _log(
+                db,
+                a.id,
+                "Reason",
+                (
+                    "Gemini interpreted the evidence and analysis request"
+                    if provider_available
+                    else (
+                        "Gemini interpretation was not configured; offline fallback used"
+                        if usage.provider_status == "offline"
+                        else "Gemini interpretation failed; fallback result used"
+                    )
+                ),
+                status=(
+                    "done"
+                    if provider_available
+                    else (
+                        "skipped"
+                        if usage.provider_status == "offline"
+                        else "failed"
+                    )
+                ),
+                ms=latency,
+            )
+
+            current_stage = "Verify"
+            stage_started = time.perf_counter()
             calcs, calc_failed = [], False
             for c in out.calculations:  # the LLM never does math: we compute it
                 try:
@@ -239,7 +285,6 @@ def run_pipeline(analysis_id: int) -> None:
                         "unit": c.unit,
                     })
 
-            _log(db, a.id, "Verify", "Checking values and confidence")
             conf = max(0.0, min(100.0, float(out.confidence)))
             if usage.provider_status != "ai":
                 conf = min(conf, 40.0)
@@ -248,7 +293,31 @@ def run_pipeline(analysis_id: int) -> None:
             needs_more = out.needs_more_evidence or conf < 60
             if needs_more:
                 conf = min(conf, 59.0)
+            _log(
+                db,
+                a.id,
+                "Verify",
+                (
+                    "Evidence grounding and deterministic checks completed"
+                    if provider_available and not calc_failed
+                    else (
+                        "Calculation verification failed"
+                        if calc_failed
+                        else "Limited local checks completed; AI grounding was unavailable"
+                    )
+                ),
+                status=(
+                    "failed"
+                    if calc_failed
+                    else "done"
+                    if provider_available
+                    else "partial"
+                ),
+                ms=int((time.perf_counter() - stage_started) * 1000),
+            )
 
+            current_stage = "Action"
+            stage_started = time.perf_counter()
             a.title, a.category, a.summary, a.confidence = (
                 out.title[:200],
                 out.category[:40],
@@ -288,11 +357,26 @@ def run_pipeline(analysis_id: int) -> None:
                 "knowledge_sources": knowledge_sources,
                 "provider_status": usage.provider_status,
             }
-            _log(db, a.id, "Action", "Preparing recommendations")
-            a.status = "completed" if usage.provider_status == "ai" else "partial"
+            a.status = (
+                "completed"
+                if provider_available and not needs_more and not calc_failed
+                else "partial"
+            )
             a.error_message = usage.error_message
             a.completed_at = datetime.now(timezone.utc)
             a.processing_time_ms = int((time.perf_counter() - started) * 1000)
+            _log(
+                db,
+                a.id,
+                "Action",
+                (
+                    "Recommendations prepared"
+                    if provider_available
+                    else "Fallback actions prepared; AI recommendations were unavailable"
+                ),
+                status="done" if provider_available else "partial",
+                ms=int((time.perf_counter() - stage_started) * 1000),
+            )
             db.add(
                 AnalysisMetric(
                     analysis_id=a.id,
@@ -323,6 +407,16 @@ def run_pipeline(analysis_id: int) -> None:
             )
             a.status, a.error_message = "failed", logger_message[:500]
             a.processing_time_ms = int((time.perf_counter() - started) * 1000)
+            _log(db, a.id, current_stage, logger_message[:300], status="failed")
+            failed_index = stage_order.index(current_stage)
+            for skipped_stage in stage_order[failed_index + 1 :]:
+                _log(
+                    db,
+                    a.id,
+                    skipped_stage,
+                    f"Skipped because {current_stage} failed",
+                    status="skipped",
+                )
             model_error = logger_message[:300]
             db.add(
                 AnalysisMetric(

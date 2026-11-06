@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import logging
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -25,11 +27,30 @@ from app.api.routes.admin import router as admin_router
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
+from app.tools.ocr import tesseract_diagnostics
 
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Development only. Use Alembic migrations in production.
+    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    ocr_status = tesseract_diagnostics()
+    if ocr_status["available"]:
+        logger.info(
+            "Tesseract initialized: version=%s languages=%s",
+            ocr_status["version"],
+            ",".join(ocr_status["languages"]),
+        )
+    else:
+        logger.error(
+            "Tesseract initialization failed; image OCR will be unavailable"
+        )
+    logger.info(
+        "Gemini configuration: configured=%s model=%s",
+        bool(settings.GEMINI_API_KEY),
+        settings.GEMINI_MODEL,
+    )
     Base.metadata.create_all(bind=engine)
     yield
 

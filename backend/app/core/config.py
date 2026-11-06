@@ -1,10 +1,10 @@
 from functools import lru_cache
 from typing import Literal, ClassVar
+import logging
+import platform
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
-import platform
 
 _INSECURE_SECRETS = {
     "",
@@ -13,6 +13,7 @@ _INSECURE_SECRETS = {
     "secret",
     "your-secret-key",
 }
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -61,7 +62,7 @@ class Settings(BaseSettings):
     # SECURITY / JWT
     # ============================================================
 
-    SECRET_KEY: str = "5svD6gIZLZYWNwvmGQl--w3l-8yz1bft00ku4QAbtuFDxNaUGQ_eicB961m_p4CN"
+    SECRET_KEY: str = "change-me"
 
     JWT_ALGORITHM: str = "HS256"
 
@@ -105,12 +106,10 @@ class Settings(BaseSettings):
     default_tesseract: ClassVar[str] = (
         r"C:\Program Files\Tesseract-OCR\tesseract.exe"
         if platform.system() == "Windows"
-        else "/usr/bin/tesseract"
+        else "tesseract"
     )
 
-    tesseract_cmd: str = os.getenv("TESSERACT_CMD", default_tesseract)
-
-    # tesseract_cmd: str = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    tesseract_cmd: str = default_tesseract
     # ============================================================
     # VALIDATORS
     # ============================================================
@@ -142,6 +141,20 @@ class Settings(BaseSettings):
     @classmethod
     def strip_frontend_slash(cls, value: str) -> str:
         return value.rstrip("/")
+
+    @field_validator("tesseract_cmd", mode="before")
+    @classmethod
+    def use_platform_tesseract_command(cls, value: str | None) -> str:
+        command = str(value or "").strip()
+        if not command:
+            return cls.default_tesseract
+        if platform.system() != "Windows" and len(command) >= 3:
+            if command[1] == ":" and command[2] in ("/", "\\"):
+                logger.warning(
+                    "Ignoring Windows TESSERACT_CMD on a non-Windows host; using PATH lookup"
+                )
+                return "tesseract"
+        return command
 
     @model_validator(mode="after")
     def validate_production(self):
