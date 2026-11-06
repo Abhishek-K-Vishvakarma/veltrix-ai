@@ -2,5 +2,5 @@ services:
   - type: web
     name: veltrix-ai
     runtime: docker
-    dockerfilePath: Dockerfile
+    dockerfilePath: backend/Dockerfile
     dockerContext: backend
