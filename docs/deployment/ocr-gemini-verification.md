@@ -8,7 +8,7 @@ Set these on the Render backend service:
 - `DATABASE_URL` to the Render PostgreSQL connection string
 - `SECRET_KEY` to a generated secret of at least 32 characters
 - `GEMINI_API_KEY` to the key from the Google AI project
-- `GEMINI_MODEL=gemini-2.0-flash` (change only
+- `GEMINI_MODEL=gemini-3.1-flash-lite` (change only
   after verifying image input and structured JSON support for the replacement)
 - `FRONTEND_URL` to the deployed Vercel origin
 - `CORS_ORIGINS` to the allowed Vercel origin(s), comma-separated

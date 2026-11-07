@@ -4,6 +4,7 @@ const API_BASE_URL = configuredApiUrl
     ? configuredApiUrl
     : `${configuredApiUrl}/api`
   : "https://veltrix-ai-msza.onrender.com/api";
+  // :"http://127.0.0.1:8000/api"
 
 interface ApiError {
   detail?: string | unknown[];
