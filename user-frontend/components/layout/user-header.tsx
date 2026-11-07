@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Bell,
   ChevronDown,
-  Command,
+  Menu,
   Search,
-  Sparkles,
   LogOut,
-  UserRound,
   ShieldCheck,
   CalendarDays,
   Clock3,
@@ -134,13 +133,19 @@ export default function UserHeader({ onMenuClick }: UserHeaderProps) {
             aria-label="Toggle sidebar"
             className="hidden h-8 w-8 items-center justify-center border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-soft)] lg:flex"
           >
-            <Command size={15} strokeWidth={1.8} />
+            <Menu size={15} strokeWidth={1.8} />
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center bg-[var(--primary)] text-white">
-              <Sparkles size={14} strokeWidth={2} />
-            </div>
+            {/* Veltrix AI logo */}
+            <Image
+              src="/veltrix-icon.svg"
+              alt="Veltrix AI logo"
+              width={32}
+              height={32}
+              priority
+              className="h-8 w-8 shrink-0 object-contain"
+            />
 
             <div className="leading-none">
               <div className="text-[14px] font-semibold tracking-[-0.02em] text-[var(--ink)]">
@@ -194,11 +199,7 @@ export default function UserHeader({ onMenuClick }: UserHeaderProps) {
           <div className="mx-1 h-6 w-px bg-[var(--line)]" />
 
           {/* Plan */}
-          <div className="hidden items-center gap-2 sm:flex">
-            <div className="flex h-7 w-7 items-center justify-center bg-[var(--primary-soft)] text-[var(--primary)]">
-              <Sparkles size={13} strokeWidth={2} />
-            </div>
-
+          <div className="hidden items-center sm:flex">
             <div className="leading-none">
               <div className="text-[11px] font-medium text-[var(--ink)]">
                 Free

@@ -218,7 +218,13 @@ def index_document(db: Session, owner: User, document_id: int) -> dict:
     db.commit()
 
     try:
-        parts = _split_chunks(_extract_pages(document))
+        parts = _split_chunks(
+            _extract_pages(
+                filename=document.filename,
+                data=read_bytes(document.storage_path),
+                content_type=document.content_type,
+            )
+        )
         if not parts:
             raise ValueError("No readable text was found in this document")
         vectors = _embed(

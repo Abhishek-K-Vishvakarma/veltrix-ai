@@ -1,19 +1,34 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
+import type { CSSProperties } from "react";
+import Image from "next/image";
+
+import "./welcome-overlay.css";
 
 const STEPS = [
-  { label: "Observe", color: "var(--primary)" },
+  { label: "Observe", color: "#8b5cf6" },
   { label: "Reason", color: "#0E9F8E" },
   { label: "Verify", color: "#D97706" },
-  { label: "Act", color: "var(--signal)" },
+  { label: "Act", color: "#22d3ee" },
 ];
 
-export function WelcomeOverlay({ name, duration, onDone }: { name?: string; duration: number; onDone: () => void }) {
+type CSSVars = CSSProperties & Record<`--${string}`, string | number>;
+
+export function WelcomeOverlay({
+  name,
+  duration,
+  onDone,
+}: {
+  name?: string;
+  duration: number;
+  onDone: () => void;
+}) {
   useEffect(() => {
     const timer = window.setTimeout(onDone, duration);
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onDone(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onDone();
+    };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -24,22 +39,74 @@ export function WelcomeOverlay({ name, duration, onDone }: { name?: string; dura
     };
   }, [onDone, duration]);
 
+  const rootStyle: CSSVars = { "--dur": `${duration}ms` };
+
   return (
-    <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="Welcome to VELTRIX AI" style={{ animationDuration: `${duration}ms` }}>
-      <div className="welcome-content">
-        <div className="welcome-logo"><Sparkles size={24} strokeWidth={2} /></div>
-        <div className="welcome-eyebrow">WELCOME TO</div>
-        <h2 className="welcome-title">VELTRIX AI</h2>
-        <p className="welcome-greet">{name ? `Good to see you, ${name}.` : "Good to see you."}</p>
-        <div className="welcome-steps">
-          {STEPS.map((s, i) => (
-            <span key={s.label} style={{ background: s.color, animationDelay: `${1.4 + i * 0.4}s` }}>{s.label}</span>
-          ))}
+    <div
+      className="wo-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome to VELTRIX AI"
+      style={rootStyle}
+    >
+      <div className="wo-grid" />
+
+      <div className="wo-stage">
+        {/* Stage 1: Observe → Reason → Verify → Act */}
+        <div className="wo-steps" aria-hidden="true">
+          <div className="wo-steps-row">
+            <div className="wo-track">
+              <i />
+            </div>
+            {STEPS.map((s, i) => {
+              const stepStyle: CSSVars = { "--i": i, "--c": s.color };
+              return (
+                <div key={s.label} className="wo-step" style={stepStyle}>
+                  <span className="wo-node" />
+                  <span className="wo-step-label">{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="wo-caption">Preparing your workspace</div>
         </div>
-        <p className="welcome-tagline">Evidence in. Verified action out.</p>
-        <div className="welcome-progress"><i style={{ animationDuration: `${duration - 400}ms` }} /></div>
+
+        {/* Stage 2: logo reveal */}
+        <div className="wo-logo-stage">
+          <div className="wo-logo-wrap">
+            <div className="wo-halo">
+              <span />
+            </div>
+            <span className="wo-ring" />
+            <span className="wo-ring wo-ring-2" />
+            <Image
+              className="wo-logo"
+              src="/veltrix-icon.svg"
+              alt="Veltrix AI logo"
+              width={132}
+              height={132}
+              priority
+            />
+          </div>
+
+          <div className="wo-eyebrow">WELCOME TO</div>
+          <h2 className="wo-title">
+            VELTRIX <span>AI</span>
+          </h2>
+          <p className="wo-greet">
+            {name ? `Good to see you, ${name}.` : "Good to see you."}
+          </p>
+          <p className="wo-tagline">Evidence in. Verified action out.</p>
+        </div>
       </div>
-      <button type="button" className="welcome-skip" onClick={onDone}>Skip ›</button>
+
+      <div className="wo-progress">
+        <i />
+      </div>
+
+      <button type="button" className="wo-skip" onClick={onDone}>
+        Skip ›
+      </button>
     </div>
   );
 }

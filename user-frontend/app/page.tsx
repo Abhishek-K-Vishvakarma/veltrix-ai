@@ -1,21 +1,27 @@
 "use client";
-
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   BarChart3,
   Bot,
+  BrainCircuit,
   CheckCircle2,
   Clock3,
   FileSearch,
   FolderOpen,
+  History,
   Lightbulb,
+  Paperclip,
   Plus,
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Eye,
+  Zap,
   TrendingUp,
 } from "lucide-react";
 
@@ -137,104 +143,159 @@ export default function HomePage() {
       tone: "text-[var(--signal)] bg-[var(--signal-soft)]",
     },
   ];
-
+const WORKFLOW = [
+  { step: "01", title: "Observe", detail: "Bring your evidence", icon: Eye, color: "#8b5cf6" },
+  { step: "02", title: "Reason", detail: "Find what matters", icon: BrainCircuit, color: "#14b8a6" },
+  { step: "03", title: "Verify", detail: "Ground results in facts", icon: ShieldCheck, color: "#f59e0b" },
+  { step: "04", title: "Act", detail: "Move forward with clarity", icon: Zap, color: "#22d3ee" },
+];
+const QUICK_STARTS = [
+  { label: "Upload evidence", icon: Paperclip },
+  { label: "Ask a hard question", icon: BrainCircuit },
+  { label: "Verify a claim", icon: FileSearch },
+];
   return (
     <WelcomeProvider>
       <UserLayout>
         <div className="space-y-6 pb-10">
-          <section className="home-hero relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-[#172b83] via-[#2347f5] to-[#5772ff] px-6 py-8 text-white shadow-xl shadow-blue-950/10 sm:px-9 sm:py-10 xl:px-12 xl:py-12">
-            <div className="absolute -right-20 -top-24 -z-10 h-80 w-80 rounded-full border border-white/10" />
-            <div className="absolute -right-8 -top-12 -z-10 h-56 w-56 rounded-full border border-white/10" />
-            <div className="absolute -bottom-28 right-[18%] -z-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-
-            <div className="grid items-center gap-9 lg:grid-cols-[1.25fr_0.75fr]">
-              <div>
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur">
-                  <Sparkles size={13} />
-                  <span className="font-mono text-[9px] uppercase tracking-[0.14em]">
-                    Your intelligence workspace
-                  </span>
+          <section className="relative isolate overflow-hidden rounded-[28px] border border-white/10 bg-[#070b1f] px-6 py-8 text-white shadow-2xl shadow-indigo-950/30 sm:px-9 sm:py-10 xl:px-12 xl:py-12">
+      {/* Background: aurora + grid + brand watermark */}
+      <div className="pointer-events-none absolute -left-24 -top-32 -z-10 h-[420px] w-[420px] rounded-full bg-violet-600/35 blur-[110px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-24 -z-10 h-[460px] w-[460px] rounded-full bg-cyan-500/25 blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(148,163,255,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,255,0.07)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_60%_40%,black,transparent_75%)]" />
+      <Image src="/veltrix-icon.svg"
+        alt=""
+        aria-hidden
+        width={460}
+        height={460}
+        className="pointer-events-none absolute -bottom-24 -right-20 -z-10 hidden w-[420px] select-none opacity-[0.06] lg:block"
+      />
+ 
+      <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
+        {/* ───────── Left: message + prompt ───────── */}
+        <div className="min-w-0">
+          <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 backdrop-blur">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
+            </span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-200">
+              Your intelligence workspace
+            </span>
+          </div>
+ 
+          <h1 className="max-w-2xl text-4xl font-semibold leading-[1.06] tracking-[-0.045em] sm:text-5xl xl:text-[3.6rem]">
+            Good work starts
+            <br />
+            with better{" "}
+            <span className="bg-gradient-to-r from-violet-300 via-sky-300 to-cyan-300 bg-clip-text text-transparent">
+              insight.
+            </span>
+          </h1>
+ 
+          <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
+            Welcome back, <span className="font-medium text-white">{userName}</span>.
+            Bring your evidence, ask the hard questions, and turn complex
+            information into decisions you can trust.
+          </p>
+ 
+          {/* Prompt-style primary action */}
+          <Link
+            href="/analysis/new"
+            className="group mt-8 flex max-w-xl items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.07] p-2 pl-4 shadow-lg shadow-indigo-950/30 backdrop-blur-xl transition hover:border-cyan-300/50 hover:bg-white/[0.1] hover:shadow-cyan-500/10"
+          >
+            <Paperclip size={17} className="shrink-0 text-slate-400" />
+            <span className="min-w-0 flex-1 truncate text-sm text-slate-300">
+              Ask a question or bring your evidence…
+            </span>
+            <span className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 px-4 text-xs font-semibold text-white shadow-lg shadow-violet-900/40 transition group-hover:brightness-110">
+              <span className="hidden sm:inline">Start an analysis</span>
+              <ArrowUp size={16} className="sm:hidden" />
+              <ArrowRight size={15} className="hidden transition group-hover:translate-x-0.5 sm:inline" />
+            </span>
+          </Link>
+ 
+          {/* Quick starts + history */}
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+            {QUICK_STARTS.map(({ label, icon: Icon }) => (
+              <Link
+                key={label}
+                href="/analysis/new"
+                className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-2 text-xs text-slate-200 transition hover:border-white/30 hover:bg-white/10"
+              >
+                <Icon size={13} className="text-cyan-300" />
+                {label}
+              </Link>
+            ))}
+            <Link
+              href="/history"
+              className="ml-1 inline-flex items-center gap-2 px-2 py-2 text-xs font-medium text-slate-300 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              <History size={14} />
+              View analysis history
+            </Link>
+          </div>
+        </div>
+ 
+        {/* ───────── Right: workflow card ───────── */}
+        <div className="relative mx-auto w-full min-w-0 max-w-md">
+          <div className="absolute -inset-px -z-10 rounded-3xl bg-gradient-to-br from-violet-400/40 via-transparent to-cyan-300/40 blur-[1px]" />
+          <div className="rounded-3xl border border-white/10 bg-[#0b1030]/80 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/veltrix-icon.svg"
+                alt="Veltrix AI"
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold tracking-tight">
+                  Intelligence workflow
                 </div>
-                <h1 className="home-hero-title max-w-2xl text-4xl font-semibold leading-[1.05] tracking-[-0.055em] text-white sm:text-5xl xl:text-6xl">
-                  Good work starts
-                  <br />
-                  with better{" "}
-                  <span className="home-hero-highlight text-[#ffb49e]">insight.</span>
-                </h1>
-                <p className="mt-5 max-w-xl text-sm leading-6 text-blue-100 sm:text-base">
-                  Welcome back, {userName}. Bring your evidence, ask the hard
-                  questions, and turn complex information into decisions you
-                  can trust.
-                </p>
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    href="/analysis/new"
-                    className="home-hero-primary inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-semibold text-[#1e3ecb] shadow-lg shadow-blue-950/15 transition hover:-translate-y-0.5 hover:bg-blue-50"
-                  >
-                    <Plus size={15} />
-                    Start an analysis
-                    <ArrowRight size={14} />
-                  </Link>
-                  <Link
-                    href="/history"
-                    className="home-hero-secondary inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                  >
-                    View analysis history
-                  </Link>
-                </div>
-              </div>
-
-              <div className="hidden lg:block">
-                <div className="relative mx-auto max-w-sm rounded-2xl border border-white/20 bg-white/10 p-5 shadow-2xl shadow-blue-950/20 backdrop-blur-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-blue-100">
-                      Intelligence workflow
-                    </span>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15">
-                      <Sparkles size={15} />
-                    </span>
-                  </div>
-                  <div className="mt-5 space-y-3">
-                    {[
-                      ["01", "Observe", "Bring your evidence"],
-                      ["02", "Reason", "Find what matters"],
-                      ["03", "Verify", "Ground results in facts"],
-                      ["04", "Act", "Move forward with clarity"],
-                    ].map(([step, title, detail], index) => (
-                      <div
-                        key={step}
-                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#142a95]/30 p-3"
-                      >
-                        <span
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg font-mono text-[9px] ${
-                            index === 3
-                              ? "bg-[#ff8c6b] text-white"
-                              : "bg-white/15 text-blue-100"
-                          }`}
-                        >
-                          {step}
-                        </span>
-                        <span className="flex-1">
-                          <span className="block text-xs font-semibold">
-                            {title}
-                          </span>
-                          <span className="mt-0.5 block text-[9px] text-blue-100">
-                            {detail}
-                          </span>
-                        </span>
-                        {index < 3 && (
-                          <CheckCircle2
-                            size={14}
-                            className="text-blue-200/70"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-slate-400">
+                  Evidence in. Verified action out.
                 </div>
               </div>
             </div>
-          </section>
+ 
+            <div className="relative mt-5 space-y-2.5">
+              <div className="absolute bottom-7 left-[2.1rem] top-7 w-px bg-gradient-to-b from-violet-400/60 via-teal-400/40 to-cyan-300/60" />
+ 
+              {WORKFLOW.map(({ step, title, detail, icon: Icon, color }, index) => {
+                const isLast = index === WORKFLOW.length - 1;
+                return (
+                  <div
+                    key={step}
+                    className={`relative flex items-center gap-3.5 rounded-2xl border p-3 transition hover:translate-x-1 ${
+                      isLast
+                        ? "border-cyan-300/30 bg-gradient-to-r from-violet-500/15 to-cyan-400/15"
+                        : "border-white/10 bg-white/[0.035] hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <span
+                      className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
+                      style={{
+                        background: `linear-gradient(${color}30, ${color}30), #0b1030`,
+                        borderColor: `${color}66`,
+                        color,
+                      }}
+                    >
+                      <Icon size={18} strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-semibold">{title}</span>
+                      <span className="mt-0.5 block text-[11px] text-slate-400">{detail}</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">{step}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
           {error && (
             <section
@@ -456,6 +517,11 @@ function HomeAction({
   description: string;
   tone: string;
 }) {
+  const QUICK_STARTS = [
+  { label: "Upload evidence", icon: Paperclip },
+  { label: "Ask a hard question", icon: BrainCircuit },
+  { label: "Verify a claim", icon: FileSearch },
+];
   return (
     <Link
       href={href}
