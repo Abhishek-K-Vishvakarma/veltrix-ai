@@ -24,6 +24,7 @@ import {
   type Project,
   type ProjectsResponse,
 } from "@/services/projects.service";
+import PageHeader from "@/components/layout/PageHeader";
 
 function ProjectStatusBadge({ status }: { status: Project["status"] }) {
   return status === "archived" ? (
@@ -116,20 +117,21 @@ export default function ProjectsPage() {
   return (
     <UserLayout>
     <div className="space-y-7">
-      <section className="flex flex-col justify-between gap-5 border-b border-[var(--line)] pb-6 md:flex-row md:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="signal-dot" />
-            <span className="mono text-[9px] uppercase tracking-[0.14em] text-[var(--muted-light)]">VELTRIX / PROJECTS</span>
-          </div>
-          <h1>Projects.</h1>
-          <p className="mt-2 max-w-2xl">Organize analyses and documents into focused intelligence workspaces.</p>
-        </div>
-        <button type="button" className="btn btn-primary shrink-0" onClick={() => setShowCreate((open) => !open)}>
-          {showCreate ? <X size={14} /> : <Plus size={14} />}
-          {showCreate ? "Cancel" : "New Project"}
-        </button>
-      </section>
+      <PageHeader
+  breadcrumb="VELTRIX / PROJECTS"
+  title="Projects."
+  description="Organize analyses and documents into focused intelligence workspaces."
+  action={
+    <button
+      type="button"
+      className="btn btn-primary"
+      onClick={() => setShowCreate((open) => !open)}
+    >
+      {showCreate ? <X size={14} /> : <Plus size={14} />}
+      {showCreate ? "Cancel" : "New Project"}
+    </button>
+  }
+/>
 
       {error && <div role="alert" className="border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">{error}</div>}
 

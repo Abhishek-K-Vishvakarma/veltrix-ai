@@ -20,7 +20,8 @@ import {
 
 import { getAnalysis } from "@/services/analysis.service";
 import type { AnalysisDetail } from "@/services/analysis.service";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default function AnalysisResultPage() {
   const params = useParams<{ id: string }>();
@@ -94,7 +95,6 @@ export default function AnalysisResultPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl space-y-4">
-        <DashboardBackLink />
         <div className="flex items-center gap-3 border-b border-[var(--line)] pb-5">
           <LoaderCircle className="animate-spin" size={20} />
           <div>
@@ -111,7 +111,6 @@ export default function AnalysisResultPage() {
   if (error && !analysis) {
     return (
       <div className="mx-auto max-w-5xl space-y-4">
-        <DashboardBackLink />
         <section className="card space-y-4 p-6">
           <TriangleAlert size={24} />
           <h2>Unable to load analysis</h2>
@@ -160,58 +159,62 @@ export default function AnalysisResultPage() {
         : `${elapsed} ms`;
 
   return (
+    <UserLayout>
     <div className="mx-auto max-w-5xl space-y-7">
-      <DashboardBackLink />
-      <section className="border-b border-[var(--line)] pb-6">
-        <Link
-          href="/history"
-          className="mb-5 inline-flex items-center gap-2 text-sm text-[var(--muted)]"
-        >
-          <ArrowLeft size={14} />
-          Back to history
-        </Link>
-
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <div className="mono mb-2 text-[10px] uppercase tracking-widest text-[var(--muted)]">
-              VELTRIX / ANALYSIS / #{analysis.id}
-            </div>
-            <h1>{analysis.title || "Untitled analysis"}</h1>
-            <p className="mt-2 text-sm">
-              {analysis.problem || "Analysis submitted with uploaded evidence."}
-            </p>
-          </div>
-
-          <span className="badge">
-            {isProcessing && <LoaderCircle size={12} className="animate-spin" />}
-            {isFailed && <TriangleAlert size={12} />}
-            {status === "completed" && <CheckCircle2 size={12} />}
-            {analysis.status.toUpperCase()}
-          </span>
-        </div>
-      </section>
+      <PageHeader
+  backHref="/history"
+  backLabel="Back to history"
+  breadcrumb={`VELTRIX / ANALYSIS / #${analysis.id}`}
+  title={analysis.title || "Untitled analysis"}
+  description={
+    analysis.problem || "Analysis submitted with uploaded evidence."
+  }
+  action={
+    <span className="badge">
+      {isProcessing && <LoaderCircle size={12} className="animate-spin" />}
+      {isFailed && <TriangleAlert size={12} />}
+      {status === "completed" && <CheckCircle2 size={12} />}
+      {analysis.status.toUpperCase()}
+    </span>
+  }
+/>
 
       {isProcessing && (
-        <section className="card space-y-3 p-5">
-          <div className="flex items-center gap-2">
-            <LoaderCircle size={18} className="animate-spin" />
-            <h3>Analysis in progress</h3>
-          </div>
-          <p className="text-sm">
-            VELTRIX is processing your evidence. This page will refresh
-            automatically when the status changes.
-          </p>
-          {logs.length > 0 && (
-            <div className="space-y-2 border-t border-[var(--line)] pt-3">
-              {logs.map((log) => (
-                <div key={log.id} className="text-sm">
-                  <strong>{log.step}</strong>: {log.message}
-                </div>
-              ))}
+  <section className="card" style={{ padding: "24px" }}>
+    <div className="flex items-center gap-3">
+      <LoaderCircle size={18} className="animate-spin" />
+      <h3
+        className="font-semibold"
+        style={{ fontSize: "1rem", lineHeight: 1.3, margin: 0 }}
+      >
+        Analysis in progress
+      </h3>
+    </div>
+
+    <p
+      className="text-sm"
+      style={{ marginTop: "12px", marginBottom: 0, lineHeight: 1.6 }}
+    >
+      VELTRIX is processing your evidence. This page will refresh
+      automatically when the status changes.
+    </p>
+
+    {logs.length > 0 && (
+      <div
+        className="border-t border-[var(--line)]"
+        style={{ marginTop: "20px", paddingTop: "16px" }}
+      >
+        <div className="flex flex-col" style={{ gap: "10px" }}>
+          {logs.map((log) => (
+            <div key={log.id} className="text-sm" style={{ lineHeight: 1.5 }}>
+              <strong>{log.step}</strong>: {log.message}
             </div>
-          )}
-        </section>
-      )}
+          ))}
+        </div>
+      </div>
+    )}
+  </section>
+)}
 
       {isFailed && (
         <section className="card space-y-3 p-5">
@@ -483,5 +486,6 @@ export default function AnalysisResultPage() {
         </Link>
       </div>
     </div>
+    </UserLayout>
   );
 }

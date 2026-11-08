@@ -20,8 +20,8 @@ import {
   type AnalysisInsights,
   type InsightType,
 } from "@/services/analysis.service";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
-
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 const typeConfig = {
   OPPORTUNITY: {
     label: "Opportunity",
@@ -187,31 +187,24 @@ export default function InsightsPage() {
   ];
 
   return (
+    <UserLayout>
     <div className="space-y-7">
-      <DashboardBackLink />
-      <section className="flex flex-col justify-between gap-5 border-b border-[var(--line)] pb-6 md:flex-row md:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="signal-dot" />
-            <span className="mono text-[9px] uppercase tracking-[0.14em] text-[var(--muted-light)]">
-              VELTRIX / INTELLIGENCE / INSIGHTS
-            </span>
-          </div>
-          <h1>Insights.</h1>
-          <p className="mt-2 max-w-2xl">
-            Findings and recommendations from your completed analyses.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void loadInsights()}
-          disabled={loading}
-          className="btn shrink-0"
-        >
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </section>
+      <PageHeader
+  breadcrumb="VELTRIX / INTELLIGENCE / INSIGHTS"
+  title="Insights."
+  description="Findings and recommendations from your completed analyses."
+  action={
+    <button
+      type="button"
+      onClick={() => void loadInsights()}
+      disabled={loading}
+      className="btn"
+    >
+      <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+      Refresh
+    </button>
+  }
+/>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {summaryCards.map(({ label, value, detail, icon: Icon, color }) => (
@@ -319,5 +312,6 @@ export default function InsightsPage() {
         ) : null}
       </section>
     </div>
+    </UserLayout>
   );
 }

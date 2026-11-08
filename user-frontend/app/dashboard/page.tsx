@@ -20,7 +20,8 @@ import {
 
 import { getAnalysesPage, getAnalysisStats, type AnalysisStats } from "@/services/analysis.service";
 import { getMe } from "@/services/auth.service";
-
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 /* =========================================================
    TYPES
    ========================================================= */
@@ -233,45 +234,26 @@ const stats = [
      ========================================================= */
 
   return (
+    <UserLayout>
     <div className="page-container page-enter pb-12">
       {/* PAGE HEADER */}
-      <section className="card mb-6 p-6 md:p-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-          <div>
-            <Link
-              href="/"
-              className="mb-4 inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--muted)] transition hover:text-[var(--primary)]"
-            >
-              <Home size={12} />
-              Home
-            </Link>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="signal-dot" />
 
-              <span className="mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-light)]">
-                VELTRIX / USER
-              </span>
-            </div>
-
-           <h1 className="text-2xl font-bold text-[var(--ink)] md:text-3xl">
-             Welcome, {userName}.
-           </h1>
-
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
-              Evidence in. Verified action out. Start an analysis and let
-              VELTRIX turn complex information into actionable intelligence.
-            </p>
-          </div>
-
-          <Link
-            href="/analysis/new"
-            className="btn btn-primary flex shrink-0 items-center gap-2 self-start font-medium md:self-auto"
-          >
-            <Plus size={16} strokeWidth={2} />
-            New Analysis
-          </Link>
-        </div>
-      </section>
+{/* PAGE HEADER */}
+<PageHeader
+  variant="card"
+  breadcrumb="VELTRIX / USER"
+  title={`Welcome, ${userName}.`}
+  description="Evidence in. Verified action out. Start an analysis and let VELTRIX turn complex information into actionable intelligence."
+  action={
+    <a
+      href="/analysis/new"
+      className="btn btn-primary flex items-center gap-2 font-medium"
+    >
+      <Plus size={16} strokeWidth={2} />
+      New Analysis
+    </a>
+  }
+/>
 
       {/* DYNAMIC STATS */}
       <section className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -651,5 +633,6 @@ const stats = [
         </div>
       </section>
     </div>
+    </UserLayout>
   );
 }

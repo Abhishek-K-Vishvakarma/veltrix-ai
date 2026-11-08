@@ -11,6 +11,7 @@ import {
   uploadKnowledgeDocument,
   type KnowledgeDocument,
 } from "@/services/knowledge.service";
+import PageHeader from "@/components/layout/PageHeader";
 
 function formatSize(size: number) {
   return size < 1024 * 1024
@@ -94,27 +95,40 @@ export default function KnowledgePage() {
   return (
     <UserLayout>
       <div className="space-y-6">
-        <header className="flex flex-col justify-between gap-4 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end">
-          <div>
-            <p className="mono mb-2 text-[10px] uppercase tracking-[.14em] text-[var(--muted-light)]">VELTRIX / KNOWLEDGE</p>
-            <h1>Your knowledge base.</h1>
-            <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">Upload and index your documents so VELTRIX can search them and answer with citations.</p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/chat" className="btn">Open AI chat <ArrowUpRight size={14} /></Link>
-            <button className="btn btn-primary" onClick={() => inputRef.current?.click()} disabled={uploading}>
-              {uploading ? <LoaderCircle className="animate-spin" size={14} /> : <Upload size={14} />}
-              Upload document
-            </button>
-            <input
-              ref={inputRef}
-              hidden
-              type="file"
-              accept=".pdf,.txt,.csv,.docx,.png,.jpg,.jpeg,.webp"
-              onChange={(event) => void onUpload(event.target.files?.[0])}
-            />
-          </div>
-        </header>
+        <PageHeader
+  breadcrumb="VELTRIX / KNOWLEDGE"
+  title="Your knowledge base."
+  description="Upload and index your documents so VELTRIX can search them and answer with citations."
+  action={
+    <div className="flex flex-wrap gap-2">
+      <Link href="/chat" className="btn">
+        Open AI chat <ArrowUpRight size={14} />
+      </Link>
+
+      <button
+        type="button"
+        className="btn btn-primary"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading ? (
+          <LoaderCircle className="animate-spin" size={14} />
+        ) : (
+          <Upload size={14} />
+        )}
+        Upload document
+      </button>
+
+      <input
+        ref={inputRef}
+        hidden
+        type="file"
+        accept=".pdf,.txt,.csv,.docx,.png,.jpg,.jpeg,.webp"
+        onChange={(event) => void onUpload(event.target.files?.[0])}
+      />
+    </div>
+  }
+/>
 
         {error && <div role="alert" className="border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">{error}</div>}
         {notice && <div role="status" className="border border-[var(--line)] bg-[var(--success-soft)] p-3 text-sm text-[var(--success)]">{notice}</div>}
@@ -122,7 +136,7 @@ export default function KnowledgePage() {
         <section className="card overflow-hidden">
           <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
             <div>
-              <h3>Your documents</h3>
+              <h4>Your documents</h4>
               <p className="mt-1 text-xs text-[var(--muted)]">{documents.length} document{documents.length === 1 ? "" : "s"} · PDF, DOCX, TXT, CSV, PNG, JPG, WEBP · 10 MB max each</p>
             </div>
             <button className="btn" onClick={() => void refresh()} aria-label="Refresh documents"><RefreshCw size={14} /></button>

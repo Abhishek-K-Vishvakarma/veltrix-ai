@@ -16,7 +16,6 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
 
 import {
   getAnalytics,
@@ -25,6 +24,8 @@ import {
 } from "@/services/analytics.service";
 
 type Preset = "7d" | "30d" | "90d" | "12m" | "all" | "custom";
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 
 function dateInputValue(date: Date) {
   const year = date.getFullYear();
@@ -194,47 +195,31 @@ export default function AnalyticsPage() {
       : `${period.startDate} — ${period.endDate}`;
 
   return (
+    <UserLayout>
     <div className="space-y-6 pb-8">
-      <DashboardBackLink />
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-[var(--primary-soft)] p-6 sm:p-8">
-        <div className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-[var(--primary)] opacity-[0.06] blur-3xl" />
-        <div className="relative flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-          <div>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="signal-dot" />
-              <span className="mono text-[9px] uppercase tracking-[0.16em] text-[var(--muted-light)]">
-                VELTRIX / INTELLIGENCE / ANALYTICS
-              </span>
-            </div>
-            <h1 className="text-4xl tracking-[-0.05em] sm:text-5xl">
-              Analytics<span className="text-[var(--primary)]">.</span>
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-              A clear view of your analysis activity, confidence, evidence, and
-              outcomes — based on your actual workspace data.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="badge badge-primary">
-              <BarChart3 size={11} />
-              PRIVATE WORKSPACE
-            </span>
-            <button
-              type="button"
-              onClick={refresh}
-              disabled={loading}
-              className="btn"
-            >
-              <RefreshCw
-                size={13}
-                className={loading ? "animate-spin" : ""}
-              />
-              Refresh
-            </button>
-          </div>
-        </div>
-      </section>
+      <PageHeader
+  variant="card"
+  breadcrumb="VELTRIX / INTELLIGENCE / ANALYTICS"
+  title="Analytics."
+  description="A clear view of your analysis activity, confidence, evidence, and outcomes, based on your actual workspace data."
+  action={
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="badge badge-primary">
+        <BarChart3 size={11} />
+        PRIVATE WORKSPACE
+      </span>
+      <button
+        type="button"
+        onClick={refresh}
+        disabled={loading}
+        className="btn"
+      >
+        <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+        Refresh
+      </button>
+    </div>
+  }
+/>
 
       <section className="card overflow-hidden">
         <div className="flex flex-col gap-4 p-4 sm:p-5 xl:flex-row xl:items-center xl:justify-between">
@@ -591,6 +576,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
     </div>
+    </UserLayout>
   );
 }
 

@@ -17,13 +17,14 @@ import {
 
 import { createAnalysis } from "@/services/analysis.service";
 import { getUserPreferences } from "@/services/settings.service";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
 import {
   getKnowledgeDocuments,
   type KnowledgeDocument,
 } from "@/services/knowledge.service";
 
 type InputMode = "text" | "file";
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default function NewAnalysisPage() {
   const [inputMode, setInputMode] = useState<InputMode>("text");
@@ -131,38 +132,23 @@ const result = await createAnalysis({
   };
 
   return (
+    <UserLayout>
     <div className="mx-auto max-w-5xl space-y-7">
       {/* =====================================================
           HEADER
           ===================================================== */}
-      <section className="border-b border-[var(--line)] pb-6">
-        <DashboardBackLink />
 
-        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="signal-dot" />
-
-              <span className="mono text-[9px] uppercase tracking-[0.14em] text-[var(--muted-light)]">
-                VELTRIX / NEW ANALYSIS
-              </span>
-            </div>
-
-            <h1>Start a new analysis.</h1>
-
-            <p className="mt-2 max-w-2xl">
-              Give VELTRIX the evidence, question, or information you want
-              investigated. The system will observe, reason, verify, and
-              produce actionable intelligence.
-            </p>
-          </div>
-
-          <div className="badge badge-primary shrink-0">
-            <Sparkles size={11} />
-            AI INTELLIGENCE
-          </div>
-        </div>
-      </section>
+<PageHeader
+  breadcrumb="VELTRIX / NEW ANALYSIS"
+  title="Start a new analysis."
+  description="Give VELTRIX the evidence, question, or information you want investigated. The system will observe, reason, verify, and produce actionable intelligence."
+  action={
+    <div className="badge badge-primary">
+      <Sparkles size={11} />
+      AI INTELLIGENCE
+    </div>
+  }
+/>
 
       
 {/* =====================================================
@@ -477,5 +463,6 @@ const result = await createAnalysis({
         ))}
       </section>
     </div>
+    </UserLayout>
   );
 }

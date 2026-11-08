@@ -23,6 +23,7 @@ import {
   type KnowledgeDocument,
   type StoredDocument,
 } from "@/services/knowledge.service";
+import PageHeader from "@/components/layout/PageHeader";
 
 type FilterType = "all" | "pdf" | "spreadsheets";
 type DocumentStatus = KnowledgeDocument["indexing_status"];
@@ -236,21 +237,12 @@ export default function DocumentsPage() {
   return (
     <UserLayout>
       <div className="space-y-7">
-        <section className="flex flex-col justify-between gap-5 border-b border-[var(--line)] pb-6 md:flex-row md:items-end">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="signal-dot" />
-              <span className="mono text-[9px] uppercase tracking-[0.14em] text-[var(--muted-light)]">
-                VELTRIX / DOCUMENTS
-              </span>
-            </div>
-            <h1>Documents.</h1>
-            <p className="mt-2 max-w-2xl">
-              Store and organize the evidence that powers your VELTRIX analyses.
-            </p>
-          </div>
-          {renderUploadButton()}
-        </section>
+        <PageHeader
+  breadcrumb="VELTRIX / DOCUMENTS"
+  title="Documents."
+  description="Store and organize the evidence that powers your VELTRIX analyses."
+  action={renderUploadButton()}
+/>
         <input
           ref={inputRef}
           hidden

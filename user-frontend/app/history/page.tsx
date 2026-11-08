@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/services/api";
 import { getAnalyses} from "@/services/analysis.service";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
 type AnalysisStatus = "VERIFIED" | "PROCESSING" | "FAILED" | "PENDING";
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 
 interface Analysis {
   id: number | string;
@@ -45,8 +46,8 @@ interface AnalysesResponse {
 }
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL || "https://veltrix-ai-msza.onrender.com"
-  // process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+  // process.env.NEXT_PUBLIC_API_URL || "https://veltrix-ai-msza.onrender.com"
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
 
 function getAnalysesUrl() {
@@ -283,38 +284,25 @@ const loadAnalyses = useCallback(async () => {
   ];
 
   return (
+    <UserLayout>
     <main className="min-h-screen bg-[var(--bg)] px-4 py-8 text-[var(--text)] sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-8">
-        <DashboardBackLink />
-        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              VELTRIX AI / WORKSPACE
-            </p>
-
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Analysis History
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-              Review your previous analyses, monitor their status, and revisit
-              completed work.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void loadAnalyses()}
-            disabled={loading}
-            className="inline-flex h-11 items-center justify-center gap-2 border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold transition hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw
-              size={16}
-              className={loading ? "animate-spin" : ""}
-            />
-            Refresh
-          </button>
-        </header>
+        <PageHeader
+  breadcrumb="VELTRIX AI / WORKSPACE"
+  title="Analysis History"
+  description="Review your previous analyses, monitor their status, and revisit completed work."
+  action={
+    <button
+      type="button"
+      onClick={() => void loadAnalyses()}
+      disabled={loading}
+      className="inline-flex h-11 items-center justify-center gap-2 border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-semibold transition hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+      Refresh
+    </button>
+  }
+/>
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => {
@@ -345,11 +333,19 @@ const loadAnalyses = useCallback(async () => {
         <section className="border border-[var(--line)] bg-[var(--surface)]">
           <div className="flex flex-col gap-4 border-b border-[var(--line)] p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">All analyses</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Showing {filteredAnalyses.length} matching records
-              </p>
-            </div>
+  <h2
+    className="font-semibold"
+    style={{ fontSize: "1rem", lineHeight: 1.3, margin: 0 }}
+  >
+    All analyses
+  </h2>
+  <p
+    className="text-[var(--muted)]"
+    style={{ marginTop: "6px", marginBottom: 0, fontSize: "0.8125rem", lineHeight: 1.5 }}
+  >
+    Showing {filteredAnalyses.length} matching records
+  </p>
+</div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex h-11 min-w-0 items-center gap-2 border border-[var(--line)] px-3 sm:w-72">
@@ -540,5 +536,6 @@ const loadAnalyses = useCallback(async () => {
         </p>
       </div>
     </main>
+    </UserLayout>
   );
 }

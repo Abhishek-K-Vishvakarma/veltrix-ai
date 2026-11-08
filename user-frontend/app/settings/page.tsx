@@ -26,7 +26,8 @@ import {
   type UserPreferences,
 } from "@/services/settings.service";
 import type { AuthUser } from "@/types/auth";
-import DashboardBackLink from "@/components/layout/dashboard-back-link";
+import UserLayout from "@/components/layout/user-layout";
+import PageHeader from "@/components/layout/PageHeader";
 
 const defaultPreferences: UserPreferences = {
   theme: "light",
@@ -172,26 +173,14 @@ export default function SettingsPage() {
   }
 
   return (
+    <UserLayout>
     <div className="space-y-7">
-      <DashboardBackLink />
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-gradient-to-br from-[var(--surface)] via-[var(--surface)] to-[var(--primary-soft)] p-6 sm:p-8">
-        <div className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-[var(--primary)] opacity-[0.06] blur-3xl" />
-        <div className="relative">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="signal-dot" />
-            <span className="mono text-[9px] uppercase tracking-[0.15em] text-[var(--muted-light)]">
-              VELTRIX / SYSTEM / SETTINGS
-            </span>
-          </div>
-          <h1 className="text-4xl tracking-[-0.05em] sm:text-5xl">
-            Settings<span className="text-[var(--primary)]">.</span>
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Manage your account, personalize the workspace, and update your
-            sign-in security.
-          </p>
-        </div>
-      </section>
+      <PageHeader
+  variant="card"
+  breadcrumb="VELTRIX / SYSTEM / SETTINGS"
+  title="Settings."
+  description="Manage your account, personalize the workspace, and update your sign-in security."
+/>
 
       {(error || notice) && (
         <div
@@ -538,6 +527,7 @@ export default function SettingsPage() {
         </div>
       </section>
     </div>
+    </UserLayout>
   );
 }
 
